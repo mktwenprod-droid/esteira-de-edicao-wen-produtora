@@ -71,19 +71,26 @@
     100%{ transform:translate(-2%,2%) scale(1.06); }
   }
   @media (prefers-reduced-motion: reduce){ body::before{ animation:none; } }
-  .wrap{
-    max-width:1400px;margin:40px auto;padding:28px 28px 44px;
-    background:var(--shell-bg);border:1px solid var(--shell-border);border-radius:28px;
-    box-shadow:var(--shell-shadow);
-    padding-left:max(28px, env(safe-area-inset-left));padding-right:max(28px, env(safe-area-inset-right));
-    transition:border-color .25s ease;
+  .shell{background:var(--shell-bg);border:1px solid var(--shell-border);border-radius:28px;box-shadow:var(--shell-shadow);transition:border-color .25s ease;}
+  .shell-row{
+    display:flex;gap:20px;align-items:flex-start;max-width:1400px;margin:40px auto;
+    padding-left:max(0px, env(safe-area-inset-left));padding-right:max(0px, env(safe-area-inset-right));
   }
+  .wrap{flex:1 1 auto;min-width:0;padding:28px 28px 44px;}
+  .side-panel{flex:0 0 340px;padding:24px;position:sticky;top:40px;max-height:calc(100vh - 80px);overflow-y:auto;}
   .topbar{
     display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
     padding-bottom:18px;margin-bottom:22px;border-bottom:1px solid var(--border);
   }
+  @media(max-width:1150px){ .side-panel{flex-basis:290px;} }
+  @media(max-width:900px){
+    .shell-row{flex-direction:column;margin:20px auto;gap:16px;}
+    .side-panel{position:static;max-height:none;width:100%;flex-basis:auto;}
+  }
   @media(max-width:700px){
-    .wrap{margin:14px;padding:18px 16px 32px;border-radius:22px;padding-left:max(16px, env(safe-area-inset-left));padding-right:max(16px, env(safe-area-inset-right));}
+    .shell-row{margin:14px;}
+    .wrap{padding:18px 16px 32px;}
+    .side-panel{padding:18px 16px;}
     .topbar{padding-bottom:14px;margin-bottom:16px;}
   }
   .brand{display:flex;align-items:center;gap:12px;}
@@ -184,6 +191,13 @@
   .detail-col-badge{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.03em;}
   .detail-section{margin-top:18px;}
   .detail-section-title{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:0.04em;color:var(--text-muted);margin-bottom:8px;}
+  .cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+  .cal-title{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:15px;color:var(--text);}
+  .cal-event{padding:10px 0;border-bottom:1px solid var(--border);}
+  .cal-event:last-child{border-bottom:none;}
+  .cal-event-date{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--track);margin-bottom:3px;}
+  .cal-event-title{font-size:13px;color:var(--text);line-height:1.3;}
+  .cal-connect-btn{width:100%;}
   .modal h2{font-family:'Space Grotesk',sans-serif;font-size:16px;margin:0 0 16px;}
   .field{margin-bottom:14px;}
   .field label{display:block;font-size:12px;color:var(--text-muted);margin-bottom:6px;}
@@ -218,7 +232,8 @@
 </style>
 </head>
 <body>
-<div class="wrap">
+<div class="shell-row">
+<div class="wrap shell">
   <div class="topbar">
     <div class="brand">
       <div class="brand-mark">
@@ -240,6 +255,13 @@
   </div>
   <div class="month-tabs" id="month-tabs"></div>
   <div id="board-area"><div class="loading">Carregando jobs…</div></div>
+</div>
+<div class="side-panel shell" id="calendar-panel">
+  <div class="cal-head">
+    <div class="cal-title">Agenda</div>
+  </div>
+  <div id="cal-body"><div class="loading">Carregando agenda…</div></div>
+</div>
 </div>
 
 <div class="modal-bg" id="modal-bg">
@@ -281,7 +303,16 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <script>
+/* =========================================================
+   CONFIGURAÇÃO DO GOOGLE CALENDAR — troque pelo Client ID do SEU projeto
+   (Google Cloud Console > APIs e serviços > Credenciais > ID do cliente OAuth)
+   Veja o passo a passo no README.md deste repositório.
+   ========================================================= */
+const GOOGLE_CLIENT_ID = "SEU_GOOGLE_CLIENT_ID_AQUI.apps.googleusercontent.com";
+/* ========================================================= */
+
 /* =========================================================
    CONFIGURAÇÃO DO FIREBASE — troque pelos valores do SEU projeto
    (Console do Firebase > Configurações do projeto > Seus apps > Config)
@@ -318,6 +349,8 @@ let docRef = null;
 let suppressNextWrite = false;
 let selectedMonth = 'all';
 let detailJobId = null;
+let gcalTokenClient = null;
+let gcalAccessToken = null;
 let collapsedCols = new Set();
 try{ collapsedCols = new Set(JSON.parse(localStorage.getItem('esteira-collapsed-cols') || '[]')); }catch(e){}
 
@@ -829,7 +862,98 @@ function render(){
   area.appendChild(board);
 }
 
+function isGoogleConfigured(){
+  return GOOGLE_CLIENT_ID && GOOGLE_CLIENT_ID.indexOf('SEU_') !== 0;
+}
+
+function initCalendarPanel(){
+  const body = document.getElementById('cal-body');
+  if(!isGoogleConfigured()){
+    body.innerHTML =
+      '<div class="setup-box"><h3>Agenda não configurada</h3>' +
+      'Para sincronizar com o Google Calendar:' +
+      '<ol>' +
+      '<li>Crie um projeto em <code>console.cloud.google.com</code></li>' +
+      '<li>Ative a <code>Google Calendar API</code></li>' +
+      '<li>Configure a tela de consentimento OAuth (modo Teste, adicione seu e-mail como testador)</li>' +
+      '<li>Crie uma credencial <code>ID do cliente OAuth</code>, tipo Aplicativo da Web, com a URL deste site em "Origens JavaScript autorizadas"</li>' +
+      '<li>Cole o Client ID no início do <code>&lt;script&gt;</code> deste arquivo (<code>index.html</code>), no lugar de <code>GOOGLE_CLIENT_ID</code>. Veja o passo a passo completo no README.md</li>' +
+      '</ol></div>';
+    return;
+  }
+  body.innerHTML = '<button class="btn-primary cal-connect-btn" onclick="connectGoogleCalendar()">Conectar com Google</button>';
+}
+
+function connectGoogleCalendar(){
+  const body = document.getElementById('cal-body');
+  if(typeof google === 'undefined' || !google.accounts){
+    body.innerHTML = '<div class="hint">A biblioteca do Google ainda não carregou. Tente novamente em instantes.</div>';
+    return;
+  }
+  if(!gcalTokenClient){
+    gcalTokenClient = google.accounts.oauth2.initTokenClient({
+      client_id: GOOGLE_CLIENT_ID,
+      scope: 'https://www.googleapis.com/auth/calendar.readonly',
+      callback: (resp) => {
+        if(resp.error){
+          body.innerHTML = '<div class="hint">Erro ao conectar: ' + escapeHtml(resp.error) + '</div>';
+          return;
+        }
+        gcalAccessToken = resp.access_token;
+        fetchCalendarEvents();
+      }
+    });
+  }
+  gcalTokenClient.requestAccessToken();
+}
+
+function fetchCalendarEvents(){
+  if(!gcalAccessToken) return;
+  const body = document.getElementById('cal-body');
+  body.innerHTML = '<div class="loading">Carregando agenda…</div>';
+  const params = new URLSearchParams({
+    timeMin: new Date().toISOString(),
+    maxResults: '8',
+    singleEvents: 'true',
+    orderBy: 'startTime'
+  });
+  fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events?' + params.toString(), {
+    headers: { Authorization: 'Bearer ' + gcalAccessToken }
+  })
+    .then(r => { if(!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+    .then(data => renderCalendarEvents(data.items || []))
+    .catch(err => {
+      body.innerHTML = '<div class="hint">Erro ao carregar agenda: ' + escapeHtml(err.message) + '</div>';
+    });
+}
+
+function renderCalendarEvents(events){
+  const body = document.getElementById('cal-body');
+  if(events.length === 0){
+    body.innerHTML = '<div class="empty">Nenhum evento próximo</div>';
+    return;
+  }
+  body.innerHTML = '';
+  events.forEach(ev => {
+    const start = ev.start && (ev.start.dateTime || ev.start.date);
+    let dateLabel = '';
+    if(start){
+      const d = new Date(start);
+      dateLabel = ev.start.dateTime
+        ? d.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit'}) + ' · ' + d.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'})
+        : d.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit'}) + ' · dia todo';
+    }
+    const row = document.createElement('div');
+    row.className = 'cal-event';
+    row.innerHTML =
+      '<div class="cal-event-date">' + escapeHtml(dateLabel) + '</div>' +
+      '<div class="cal-event-title">' + escapeHtml(ev.summary || '(sem título)') + '</div>';
+    body.appendChild(row);
+  });
+}
+
 initFirebase();
+initCalendarPanel();
 </script>
 </body>
 </html>

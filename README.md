@@ -32,7 +32,19 @@ service cloud.firestore {
 
 ## Anexos
 
-Cada card pode ter links anexados (Google Drive, WeTransfer, Frame.io etc.) pelo botão de anexo (📎). Funciona sem nenhuma configuração extra no Firebase.
+Clicando em qualquer card abre a visão detalhada, onde dá pra anexar links (Google Drive, WeTransfer, Frame.io etc.), editar o nome e marcar os formatos concluídos. Funciona sem nenhuma configuração extra no Firebase.
+
+## Configurar a agenda do Google Calendar (opcional)
+
+O painel lateral "Agenda" mostra os próximos eventos do Google Calendar de quem estiver logado. É gratuito — a API do Google Calendar não tem plano pago, só uma cota diária bem generosa, sem precisar de cartão de crédito.
+
+1. Acesse [console.cloud.google.com](https://console.cloud.google.com) e crie um projeto novo (pode reaproveitar um existente).
+2. Vá em **APIs e serviços → Biblioteca**, procure **Google Calendar API** e clique em **Ativar**.
+3. Vá em **APIs e serviços → Tela de consentimento OAuth**. Escolha **Externo**, preencha o nome do app e seu e-mail, e deixe em modo **Teste** — nesse modo não precisa de verificação do Google, só funciona para os e-mails que você adicionar como **usuários de teste** (adicione o seu e o de quem mais for usar).
+4. Vá em **APIs e serviços → Credenciais → Criar credenciais → ID do cliente OAuth**. Tipo de aplicativo: **Aplicativo da Web**. Em **Origens JavaScript autorizadas**, adicione a URL do seu site publicado (ex: `https://seu-usuario.github.io`) — sem caminho no final.
+5. Copie o **Client ID** gerado (termina em `.apps.googleusercontent.com`).
+6. Abra o [index.html](index.html), procure o bloco `CONFIGURAÇÃO DO GOOGLE CALENDAR` (perto do fim do arquivo) e cole o Client ID no lugar de `GOOGLE_CLIENT_ID`.
+7. Faça commit e push. No painel lateral do site, clique em **Conectar com Google** e autorize o acesso (somente leitura) à sua agenda.
 
 ## Publicar / acessar de qualquer lugar (GitHub Pages)
 
