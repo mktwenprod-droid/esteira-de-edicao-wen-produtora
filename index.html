@@ -218,6 +218,16 @@
   .cal-week-day-head{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:12px;color:var(--text);margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid var(--border);text-transform:capitalize;}
   .cal-week-day-head.today{color:var(--primary);}
   .cal-empty-day{color:var(--text-muted);font-size:12px;padding:4px 0;}
+  .cal-menu-wrap{position:relative;}
+  .cal-menu{position:absolute;top:calc(100% + 6px);right:0;min-width:230px;background:var(--panel-2);border:1px solid var(--border-strong);border-radius:12px;box-shadow:var(--shadow-lg);padding:8px;display:none;z-index:6;}
+  .cal-menu.open{display:block;}
+  .cal-menu-item{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;border-radius:8px;font-size:13px;color:var(--text);cursor:pointer;}
+  .cal-menu-item:hover{background:var(--panel-3);}
+  .cal-menu-email{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--text-muted);}
+  .cal-menu-divider{height:1px;background:var(--border);margin:6px 2px;}
+  .cal-menu-add{color:var(--primary);font-weight:600;}
+  .cal-menu-remove{color:var(--text-muted);background:transparent;border:none;cursor:pointer;font-size:13px;flex:none;padding:2px 4px;}
+  .cal-menu-remove:hover{color:var(--red);}
   .modal h2{font-family:'Space Grotesk',sans-serif;font-size:16px;margin:0 0 16px;}
   .field{margin-bottom:14px;}
   .field label{display:block;font-size:12px;color:var(--text-muted);margin-bottom:6px;}
@@ -279,7 +289,12 @@
 <div class="side-panel shell" id="calendar-panel">
   <div class="cal-head">
     <div class="cal-title">Agenda</div>
-    <button class="btn-ghost" id="cal-connect-btn" onclick="connectGoogleCalendar()">Conectar</button>
+    <div class="cal-menu-wrap">
+      <button class="theme-toggle" id="cal-menu-btn" onclick="toggleCalMenu()" title="Contas conectadas" aria-label="Contas conectadas">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><circle cx="12" cy="5" r="1.8"></circle><circle cx="12" cy="12" r="1.8"></circle><circle cx="12" cy="19" r="1.8"></circle></svg>
+      </button>
+      <div class="cal-menu" id="cal-menu"></div>
+    </div>
   </div>
   <div id="cal-body"><div class="loading">Carregando agenda…</div></div>
 </div>
@@ -370,8 +385,8 @@ let docRef = null;
 let suppressNextWrite = false;
 let selectedMonth = 'all';
 let detailJobId = null;
-let gcalTokenClient = null;
-let gcalAccessToken = null;
+let gcalAccounts = [];
+let calMenuOpen = false;
 let calView = 'month';
 let calRefDate = new Date();
 let calEvents = [];
@@ -941,7 +956,7 @@ function calEventRowHtml(ev){
 
 function initCalendarPanel(){
   if(!isGoogleConfigured()){
-    document.getElementById('cal-connect-btn').style.display = 'none';
+    document.getElementById('cal-menu-btn').style.display = 'none';
     document.getElementById('cal-body').innerHTML =
       '<div class="setup-box"><h3>Agenda não configurada</h3>' +
       'Para sincronizar com o Google Calendar:' +
@@ -954,36 +969,127 @@ function initCalendarPanel(){
       '</ol></div>';
     return;
   }
+  tryAutoReconnect();
+}
+
+function requestGoogleToken(opts){
+  if(typeof google === 'undefined' || !google.accounts){
+    opts.onError && opts.onError('lib-not-loaded');
+    return;
+  }
+  const client = google.accounts.oauth2.initTokenClient({
+    client_id: GOOGLE_CLIENT_ID,
+    scope: 'https://www.googleapis.com/auth/calendar.readonly https://www.googleapis.com/auth/userinfo.email',
+    hint: opts.hint || undefined,
+    prompt: opts.prompt !== undefined ? opts.prompt : '',
+    callback: (resp) => {
+      if(resp.error){ opts.onError && opts.onError(resp.error); return; }
+      opts.onSuccess && opts.onSuccess(resp.access_token);
+    }
+  });
+  client.requestAccessToken();
+}
+
+function rememberedAccountEmails(){
+  try{ return JSON.parse(localStorage.getItem('esteira-gcal-accounts') || '[]'); }catch(e){ return []; }
+}
+function saveRememberedAccounts(){
+  try{ localStorage.setItem('esteira-gcal-accounts', JSON.stringify(gcalAccounts.map(a => a.email))); }catch(e){}
+}
+
+function tryAutoReconnect(){
+  const remembered = rememberedAccountEmails();
+  if(remembered.length === 0){ refreshCalendar(); return; }
+  let pending = remembered.length;
+  remembered.forEach(email => {
+    requestGoogleToken({
+      hint: email,
+      prompt: '',
+      onSuccess: (token) => {
+        gcalAccounts.push({email, accessToken: token});
+        pending--;
+        if(pending === 0){ refreshCalendar(); }
+      },
+      onError: () => {
+        pending--;
+        if(pending === 0){ refreshCalendar(); }
+      }
+    });
+  });
+}
+
+function connectGoogleCalendar(forceChooser){
+  requestGoogleToken({
+    prompt: forceChooser ? 'select_account consent' : '',
+    onSuccess: (token) => addOrUpdateAccountFromToken(token),
+    onError: (err) => {
+      document.getElementById('cal-grid').innerHTML = '<div class="hint">Erro ao conectar: ' + escapeHtml(err) + '</div>';
+    }
+  });
+}
+
+function addOrUpdateAccountFromToken(token){
+  fetch('https://www.googleapis.com/oauth2/v3/userinfo', { headers: { Authorization: 'Bearer ' + token } })
+    .then(r => r.json())
+    .then(info => {
+      const email = info.email || ('conta-' + (gcalAccounts.length + 1));
+      const existing = gcalAccounts.find(a => a.email === email);
+      if(existing){ existing.accessToken = token; }
+      else{ gcalAccounts.push({email, accessToken: token}); }
+      saveRememberedAccounts();
+      renderCalMenu();
+      refreshCalendar();
+    })
+    .catch(() => {
+      gcalAccounts.push({email: 'Conta ' + (gcalAccounts.length + 1), accessToken: token});
+      saveRememberedAccounts();
+      renderCalMenu();
+      refreshCalendar();
+    });
+}
+
+function removeGoogleAccount(email){
+  const acc = gcalAccounts.find(a => a.email === email);
+  if(acc && typeof google !== 'undefined' && google.accounts){
+    google.accounts.oauth2.revoke(acc.accessToken, () => {});
+  }
+  gcalAccounts = gcalAccounts.filter(a => a.email !== email);
+  saveRememberedAccounts();
+  renderCalMenu();
   refreshCalendar();
 }
 
-function connectGoogleCalendar(){
-  if(typeof google === 'undefined' || !google.accounts){
-    document.getElementById('cal-grid').innerHTML = '<div class="hint">A biblioteca do Google ainda não carregou. Tente novamente em instantes.</div>';
-    return;
-  }
-  if(!gcalTokenClient){
-    gcalTokenClient = google.accounts.oauth2.initTokenClient({
-      client_id: GOOGLE_CLIENT_ID,
-      scope: 'https://www.googleapis.com/auth/calendar.readonly',
-      callback: (resp) => {
-        if(resp.error){
-          document.getElementById('cal-grid').innerHTML = '<div class="hint">Erro ao conectar: ' + escapeHtml(resp.error) + '</div>';
-          return;
-        }
-        gcalAccessToken = resp.access_token;
-        refreshCalendar();
-      }
-    });
-  }
-  gcalTokenClient.requestAccessToken();
-}
+function toggleCalMenu(){ calMenuOpen = !calMenuOpen; renderCalMenu(); }
+function closeCalMenu(){ if(calMenuOpen){ calMenuOpen = false; renderCalMenu(); } }
+document.addEventListener('click', (e) => {
+  if(calMenuOpen && !e.target.closest('.cal-menu-wrap')) closeCalMenu();
+});
 
-function updateCalConnectBtn(){
-  const btn = document.getElementById('cal-connect-btn');
-  if(!btn) return;
-  btn.textContent = gcalAccessToken ? 'Atualizar' : 'Conectar';
-  btn.onclick = gcalAccessToken ? loadCalEvents : connectGoogleCalendar;
+function renderCalMenu(){
+  const menu = document.getElementById('cal-menu');
+  if(!menu) return;
+  menu.className = 'cal-menu' + (calMenuOpen ? ' open' : '');
+  if(!calMenuOpen){ menu.innerHTML = ''; return; }
+  let html = '';
+  if(gcalAccounts.length === 0){
+    html += '<div class="cal-menu-item" style="color:var(--text-muted);cursor:default;">Nenhuma conta conectada</div><div class="cal-menu-divider"></div>';
+  } else {
+    gcalAccounts.forEach(acc => {
+      html += '<div class="cal-menu-item"><span class="cal-menu-email" title="' + escapeHtml(acc.email) + '">' + escapeHtml(acc.email) + '</span>' +
+        '<button class="cal-menu-remove" data-remove-acc="' + escapeHtml(acc.email) + '" title="Remover">✕</button></div>';
+    });
+    html += '<div class="cal-menu-divider"></div>';
+  }
+  html += '<div class="cal-menu-item cal-menu-add" data-add-acc>+ Adicionar conta</div>';
+  html += '<div class="cal-menu-item" data-refresh-acc>Atualizar agora</div>';
+  menu.innerHTML = html;
+  menu.querySelectorAll('[data-remove-acc]').forEach(btn => {
+    btn.addEventListener('click', e => { e.stopPropagation(); removeGoogleAccount(btn.getAttribute('data-remove-acc')); });
+  });
+  const addBtn = menu.querySelector('[data-add-acc]');
+  if(addBtn) addBtn.addEventListener('click', e => { e.stopPropagation(); closeCalMenu(); connectGoogleCalendar(true); });
+  const refreshBtn = menu.querySelector('[data-refresh-acc]');
+  if(refreshBtn) refreshBtn.addEventListener('click', e => { e.stopPropagation(); closeCalMenu(); loadCalEvents(); });
 }
 
 function setCalView(view){ calView = view; refreshCalendar(); }
@@ -1024,11 +1130,11 @@ function renderCalendarPanel(){
     btn.addEventListener('click', () => setCalView(btn.getAttribute('data-view')));
   });
   body.querySelector('[data-today]').addEventListener('click', goToCalToday);
-  updateCalConnectBtn();
+  renderCalMenu();
 }
 
 function loadCalEvents(){
-  if(!gcalAccessToken){
+  if(gcalAccounts.length === 0){
     calEvents = [];
     renderCalGrid();
     return;
@@ -1041,19 +1147,20 @@ function loadCalEvents(){
     singleEvents: 'true',
     orderBy: 'startTime'
   });
-  fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events?' + params.toString(), {
-    headers: { Authorization: 'Bearer ' + gcalAccessToken }
-  })
-    .then(r => { if(!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
-    .then(data => { calEvents = data.items || []; renderCalGrid(); })
-    .catch(err => {
-      const grid = document.getElementById('cal-grid');
-      if(grid) grid.innerHTML = '<div class="hint">Erro ao carregar agenda: ' + escapeHtml(err.message) + '</div>';
-    });
+  Promise.all(gcalAccounts.map(acc =>
+    fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events?' + params.toString(), {
+      headers: { Authorization: 'Bearer ' + acc.accessToken }
+    })
+      .then(r => { if(!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(data => data.items || [])
+      .catch(() => [])
+  )).then(results => {
+    calEvents = results.flat();
+    renderCalGrid();
+  });
 }
 
 function renderCalGrid(){
-  updateCalConnectBtn();
   const grid = document.getElementById('cal-grid');
   if(!grid) return;
   if(calView === 'month') renderMonthGrid(grid);

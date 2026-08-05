@@ -44,7 +44,9 @@ O painel lateral "Agenda" mostra os próximos eventos do Google Calendar de quem
 4. Vá em **APIs e serviços → Credenciais → Criar credenciais → ID do cliente OAuth**. Tipo de aplicativo: **Aplicativo da Web**. Em **Origens JavaScript autorizadas**, adicione a URL do seu site publicado (ex: `https://seu-usuario.github.io`) — sem caminho no final.
 5. Copie o **Client ID** gerado (termina em `.apps.googleusercontent.com`).
 6. Abra o [index.html](index.html), procure o bloco `CONFIGURAÇÃO DO GOOGLE CALENDAR` (perto do fim do arquivo) e cole o Client ID no lugar de `GOOGLE_CLIENT_ID`.
-7. Faça commit e push. No painel lateral do site, clique em **Conectar com Google** e autorize o acesso (somente leitura) à sua agenda.
+7. Faça commit e push. No painel lateral do site, clique no menu **⋮** (três pontinhos) → **Adicionar conta** e autorize o acesso (somente leitura) à sua agenda.
+
+Pelo menu **⋮** também dá pra conectar mais de uma conta (os eventos de todas aparecem juntos) e remover uma conta já conectada. Depois de conectar uma vez, o site tenta reconectar sozinho a cada visita (sem precisar clicar de novo) contanto que você continue logado nessa conta Google no navegador; se não conseguir automaticamente, é só clicar em "Adicionar conta" de novo.
 
 ## Publicar / acessar de qualquer lugar (GitHub Pages)
 
