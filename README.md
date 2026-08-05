@@ -30,28 +30,9 @@ service cloud.firestore {
 
 > A `apiKey` do Firebase para apps Web não é um segredo (ela só identifica o projeto); quem protege os dados de verdade são as regras do Firestore acima, por isso é normal ela ficar visível no código publicado.
 
-## Configurar anexos (Firebase Storage — opcional)
+## Anexos
 
-Os cards suportam anexar fotos, arquivos ou links. Links funcionam sem nenhuma configuração extra. Para upload de fotos/arquivos de verdade, é preciso ativar o **Cloud Storage**, o que exige o plano **Blaze** (pago por uso — mas o uso normal deste app fica bem dentro da cota gratuita mensal do Blaze; é preciso só cadastrar um cartão).
-
-1. No console do Firebase, vá em **Uso e faturamento** → **Detalhes e configurações** → **Modificar plano** → escolha **Blaze**.
-2. Vá em **Build → Storage** → **Começar** → escolha uma localização (de preferência a mesma do Firestore) → modo **produção**.
-3. Em **Storage → Regras**, cole:
-
-```
-rules_version = '2';
-service firebase.storage {
-  match /b/{bucket}/o {
-    match /attachments/{jobId}/{fileName} {
-      allow read, write: if request.auth != null;
-    }
-  }
-}
-```
-
-4. Publique as regras. Pronto — o botão de anexo (📎) em cada card já funciona para upload de arquivos/fotos.
-
-Se você não ativar o Storage, o campo de link continua funcionando normalmente; só o upload de arquivo mostrará uma mensagem de erro ao tentar enviar.
+Cada card pode ter links anexados (Google Drive, WeTransfer, Frame.io etc.) pelo botão de anexo (📎). Funciona sem nenhuma configuração extra no Firebase.
 
 ## Publicar / acessar de qualquer lugar (GitHub Pages)
 
