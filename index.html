@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Esteira de Edição — WEN</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0B1220; --panel:#121B2E; --panel-2:#1A2740; --panel-3:#22314F;
+    --border:rgba(255,255,255,0.08); --border-strong:rgba(255,255,255,0.16);
+    --text:#EDEFF5; --text-muted:#8A93A6;
+    --yellow:#F2B705; --yellow-dim:#5A4B12;
+    --red:#E5484D; --red-dim:#4A1B1D;
+    --green:#3DDC97; --green-dim:#123B2C;
+    --gray:#3A4661; --gray-dim:#1C2438;
+    --radius:12px;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;padding:0;}
+  .wrap{max-width:1380px;margin:0 auto;padding:28px 24px 60px;}
+  .topbar{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:6px;flex-wrap:wrap;gap:12px;}
+  h1{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:22px;margin:0;letter-spacing:-0.01em;}
+  .sub{color:var(--text-muted);font-size:13px;margin:4px 0 22px;display:flex;align-items:center;gap:8px;}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--gray);flex:none;}
+  .dot.online{background:var(--green);}
+  .dot.error{background:var(--red);}
+  .addbtn{background:var(--yellow);color:#231A02;border:none;font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:14px;padding:10px 16px;border-radius:8px;cursor:pointer;}
+  .addbtn:hover{filter:brightness(1.08);}
+  .board{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;align-items:start;}
+  @media(max-width:1100px){.board{grid-template-columns:repeat(2,1fr);}}
+  @media(max-width:620px){.board{grid-template-columns:1fr;}}
+  .col{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:12px;min-height:80px;}
+  .col-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding:0 2px;}
+  .col-title{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:0.04em;color:var(--text-muted);}
+  .col-count{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--text-muted);background:var(--panel-2);padding:2px 7px;border-radius:20px;}
+  .cards{display:flex;flex-direction:column;gap:10px;}
+  .card{background:var(--panel-2);border:1px solid var(--border);border-radius:10px;padding:12px 12px 10px;}
+  .card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:8px;}
+  .card-name{font-size:14px;font-weight:500;line-height:1.3;cursor:text;border-bottom:1px dashed transparent;}
+  .card-name:hover{border-bottom-color:var(--border-strong);}
+  .card-name-input{font-size:14px;font-weight:500;line-height:1.3;background:var(--panel-3);border:1px solid var(--yellow);color:var(--text);border-radius:5px;padding:2px 5px;width:100%;font-family:'Inter',sans-serif;}
+  .ring{position:relative;width:34px;height:34px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;}
+  .ring-label{font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:500;background:var(--panel);border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;}
+  .meta{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-muted);margin-bottom:10px;}
+  .fmts{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;}
+  .fmt-chip{display:flex;align-items:center;gap:5px;font-size:11px;padding:4px 8px;border-radius:6px;background:var(--panel-3);border:1px solid var(--border);cursor:pointer;user-select:none;color:var(--text-muted);}
+  .fmt-chip input{accent-color:var(--yellow);width:12px;height:12px;margin:0;}
+  .fmt-chip.done{color:var(--green);border-color:var(--green-dim);background:var(--green-dim);}
+  .card-actions{display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--border);padding-top:8px;}
+  .movebtns{display:flex;gap:4px;}
+  .movebtns button{background:transparent;border:1px solid var(--border);color:var(--text-muted);border-radius:6px;width:24px;height:24px;font-size:13px;cursor:pointer;line-height:1;}
+  .movebtns button:hover{border-color:var(--border-strong);color:var(--text);}
+  .iconbtns{display:flex;gap:10px;align-items:center;}
+  .iconbtn{background:transparent;border:none;color:var(--text-muted);cursor:pointer;font-size:14px;line-height:1;}
+  .iconbtn:hover{color:var(--yellow);}
+  .delbtn:hover{color:var(--red);}
+  .empty{color:var(--text-muted);font-size:12px;text-align:center;padding:18px 4px;}
+  .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.55);display:none;align-items:center;justify-content:center;z-index:10;padding:16px;}
+  .modal-bg.open{display:flex;}
+  .modal{background:var(--panel);border:1px solid var(--border-strong);border-radius:var(--radius);padding:22px;width:100%;max-width:380px;}
+  .modal h2{font-family:'Space Grotesk',sans-serif;font-size:16px;margin:0 0 16px;}
+  .field{margin-bottom:14px;}
+  .field label{display:block;font-size:12px;color:var(--text-muted);margin-bottom:6px;}
+  .field .hint{font-size:11px;color:var(--text-muted);margin-top:5px;}
+  .field input[type=text],.field input[type=date]{width:100%;background:var(--panel-2);border:1px solid var(--border);color:var(--text);border-radius:7px;padding:9px 10px;font-family:'Inter',sans-serif;font-size:13px;}
+  .field input[type=text]:focus,.field input[type=date]:focus{outline:none;border-color:var(--yellow);}
+  .checks{display:flex;gap:10px;flex-wrap:wrap;}
+  .check{display:flex;align-items:center;gap:6px;font-size:13px;background:var(--panel-2);padding:7px 10px;border-radius:7px;border:1px solid var(--border);cursor:pointer;}
+  .check input{accent-color:var(--yellow);}
+  .modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:18px;}
+  .btn-ghost{background:transparent;border:1px solid var(--border);color:var(--text-muted);padding:9px 14px;border-radius:7px;font-size:13px;cursor:pointer;}
+  .btn-primary{background:var(--yellow);color:#231A02;border:none;padding:9px 16px;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;}
+  .loading{color:var(--text-muted);font-size:13px;padding:20px 0;}
+  .setup-box{background:var(--panel);border:1px solid var(--red-dim);border-radius:var(--radius);padding:20px 22px;font-size:13px;line-height:1.7;color:var(--text-muted);}
+  .setup-box h3{color:var(--text);font-family:'Space Grotesk',sans-serif;font-size:15px;margin:0 0 10px;}
+  .setup-box code{background:var(--panel-2);padding:2px 6px;border-radius:4px;color:var(--yellow);font-family:'IBM Plex Mono',monospace;font-size:12px;}
+  .setup-box ol{padding-left:18px;margin:8px 0;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <div>
+      <h1>Esteira de edição</h1>
+      <div class="sub"><span class="dot" id="status-dot"></span><span id="status-text">Conectando…</span></div>
+    </div>
+    <button class="addbtn" onclick="openModal()">+ Novo job</button>
+  </div>
+  <div id="board-area"><div class="loading">Carregando jobs…</div></div>
+</div>
+
+<div class="modal-bg" id="modal-bg">
+  <div class="modal">
+    <h2>Novo job de edição</h2>
+    <div class="field">
+      <label>Nome do episódio / job</label>
+      <input type="text" id="f-nome" placeholder="Ex: EP34 — Convidado X">
+    </div>
+    <div class="field">
+      <label>Data de recebimento da decupagem</label>
+      <input type="date" id="f-data">
+      <div class="hint">Deixe em branco se ainda está em decupagem. O prazo só começa a contar quando a decupagem chega.</div>
+    </div>
+    <div class="field">
+      <label>Formatos necessários</label>
+      <div class="checks">
+        <label class="check"><input type="checkbox" id="f-integra" checked> Íntegra</label>
+        <label class="check"><input type="checkbox" id="f-horizontal"> Corte horizontal</label>
+        <label class="check"><input type="checkbox" id="f-vertical"> Corte vertical</label>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeModal()">Cancelar</button>
+      <button class="btn-primary" onclick="saveNewJob()">Adicionar</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+/* =========================================================
+   CONFIGURAÇÃO DO FIREBASE — troque pelos valores do SEU projeto
+   (Console do Firebase > Configurações do projeto > Seus apps > Config)
+   Veja o passo a passo no README.md deste repositório.
+   ========================================================= */
+const firebaseConfig = {
+  apiKey: "SUA_API_KEY_AQUI",
+  authDomain: "SEU_PROJETO.firebaseapp.com",
+  projectId: "SEU_PROJETO",
+  storageBucket: "SEU_PROJETO.appspot.com",
+  messagingSenderId: "SEU_SENDER_ID",
+  appId: "SEU_APP_ID"
+};
+/* ========================================================= */
+
+const DOC_PATH = { collection: 'esteira-edicao', doc: 'jobs' };
+
+const COLUMNS = [
+  {id:'decupagem', label:'Em decupagem'},
+  {id:'recebido', label:'Recebido'},
+  {id:'edicao', label:'Em edição'},
+  {id:'revisao', label:'Revisão'},
+  {id:'entregue', label:'Entregue'}
+];
+const FMT_LABEL = {integra:'Íntegra', horizontal:'Corte H', vertical:'Corte V'};
+let jobs = [];
+let db = null;
+let docRef = null;
+let suppressNextWrite = false;
+
+function setStatus(state, text){
+  const dot = document.getElementById('status-dot');
+  const t = document.getElementById('status-text');
+  dot.className = 'dot' + (state ? ' ' + state : '');
+  t.textContent = text;
+}
+
+function isConfigured(){
+  return firebaseConfig.apiKey && firebaseConfig.apiKey !== 'SUA_API_KEY_AQUI';
+}
+
+function showSetupNotice(){
+  document.getElementById('board-area').innerHTML =
+    '<div class="setup-box"><h3>Falta configurar o Firebase</h3>' +
+    'Este arquivo ainda está com as chaves de exemplo. Para os dados sincronizarem entre dispositivos:' +
+    '<ol>' +
+    '<li>Crie um projeto em <code>console.firebase.google.com</code></li>' +
+    '<li>Ative o <code>Firestore Database</code> (modo produção)</li>' +
+    '<li>Em <code>Authentication → Sign-in method</code>, ative <code>Anonymous</code></li>' +
+    '<li>Em <code>Configurações do projeto → Seus apps</code>, crie um app da Web e copie o objeto <code>firebaseConfig</code></li>' +
+    '<li>Cole esses valores no início do <code>&lt;script&gt;</code> deste arquivo (<code>index.html</code>), no lugar de <code>firebaseConfig</code>. Veja o passo a passo completo no README.md</li>' +
+    '</ol></div>';
+}
+
+function initFirebase(){
+  if(!isConfigured()){
+    setStatus('error', 'Firebase não configurado');
+    showSetupNotice();
+    return;
+  }
+  try{
+    firebase.initializeApp(firebaseConfig);
+    db = firebase.firestore();
+    docRef = db.collection(DOC_PATH.collection).doc(DOC_PATH.doc);
+    firebase.auth().signInAnonymously().catch(err => {
+      setStatus('error', 'Erro na autenticação: ' + err.message);
+    });
+    firebase.auth().onAuthStateChanged(user => {
+      if(user){
+        setStatus('online', 'Sincronizado');
+        listenJobs();
+      }
+    });
+  }catch(e){
+    setStatus('error', 'Erro ao iniciar Firebase');
+    console.error(e);
+  }
+}
+
+function listenJobs(){
+  docRef.onSnapshot(snap => {
+    if(suppressNextWrite){ suppressNextWrite = false; return; }
+    const data = snap.data();
+    jobs = (data && data.list) ? data.list : [];
+    render();
+  }, err => {
+    setStatus('error', 'Erro ao ler dados: ' + err.message);
+    console.error(err);
+  });
+}
+
+function persist(){
+  if(!docRef) return;
+  suppressNextWrite = true;
+  docRef.set({ list: jobs, updatedAt: firebase.firestore.FieldValue.serverTimestamp() })
+    .catch(err => {
+      setStatus('error', 'Erro ao salvar: ' + err.message);
+      console.error(err);
+    });
+}
+
+function todayISO(){
+  const d = new Date();
+  return new Date(d.getFullYear(),d.getMonth(),d.getDate()).toISOString().slice(0,10);
+}
+
+function addBusinessDays(isoDate, days){
+  let d = new Date(isoDate + 'T00:00:00');
+  let added = 0;
+  while(added < days){
+    d.setDate(d.getDate()+1);
+    const wd = d.getDay();
+    if(wd !== 0 && wd !== 6) added++;
+  }
+  return d;
+}
+
+function businessDaysLeft(deadlineDate){
+  const today = new Date(); today.setHours(0,0,0,0);
+  const dl = new Date(deadlineDate); dl.setHours(0,0,0,0);
+  const sign = dl >= today ? 1 : -1;
+  const a = new Date(Math.min(today,dl));
+  const b = new Date(Math.max(today,dl));
+  let count = 0;
+  let d = new Date(a);
+  while(d < b){
+    d.setDate(d.getDate()+1);
+    const wd = d.getDay();
+    if(wd !== 0 && wd !== 6) count++;
+  }
+  return count*sign;
+}
+
+function urgencyColor(daysLeft){
+  if(daysLeft < 0) return {ring:'var(--red)', dim:'var(--red-dim)', text:'var(--red)'};
+  if(daysLeft <= 1) return {ring:'var(--yellow)', dim:'var(--yellow-dim)', text:'var(--yellow)'};
+  return {ring:'var(--green)', dim:'var(--green-dim)', text:'var(--text-muted)'};
+}
+
+function openModal(){
+  document.getElementById('f-nome').value = '';
+  document.getElementById('f-data').value = '';
+  document.getElementById('f-integra').checked = true;
+  document.getElementById('f-horizontal').checked = false;
+  document.getElementById('f-vertical').checked = false;
+  document.getElementById('modal-bg').classList.add('open');
+  document.getElementById('f-nome').focus();
+}
+function closeModal(){
+  document.getElementById('modal-bg').classList.remove('open');
+}
+
+function saveNewJob(){
+  const nome = document.getElementById('f-nome').value.trim();
+  const data = document.getElementById('f-data').value || null;
+  if(!nome){ document.getElementById('f-nome').focus(); return; }
+  const formatos = [];
+  if(document.getElementById('f-integra').checked) formatos.push('integra');
+  if(document.getElementById('f-horizontal').checked) formatos.push('horizontal');
+  if(document.getElementById('f-vertical').checked) formatos.push('vertical');
+  if(formatos.length === 0) formatos.push('integra');
+  const done = {};
+  formatos.forEach(f => done[f] = false);
+  jobs.push({
+    id: 'job-' + Date.now() + '-' + Math.random().toString(36).slice(2,6),
+    nome, recebido: data, formatos, done,
+    status: data ? 'recebido' : 'decupagem'
+  });
+  closeModal();
+  persist();
+  render();
+}
+
+function duplicateJob(id){
+  const job = jobs.find(j => j.id === id);
+  if(!job) return;
+  const clone = JSON.parse(JSON.stringify(job));
+  clone.id = 'job-' + Date.now() + '-' + Math.random().toString(36).slice(2,6);
+  clone.nome = job.nome + ' (cópia)';
+  Object.keys(clone.done).forEach(k => clone.done[k] = false);
+  jobs.push(clone);
+  persist();
+  render();
+}
+
+function toggleFormat(id, fmt){
+  const job = jobs.find(j => j.id === id);
+  if(!job) return;
+  job.done[fmt] = !job.done[fmt];
+  persist();
+  render();
+}
+
+function moveJob(id, dir){
+  const job = jobs.find(j => j.id === id);
+  if(!job) return;
+  const idx = COLUMNS.findIndex(c => c.id === job.status);
+  const newIdx = idx + dir;
+  if(newIdx < 0 || newIdx >= COLUMNS.length) return;
+  const newCol = COLUMNS[newIdx].id;
+  if(newCol !== 'decupagem' && !job.recebido){
+    job.recebido = todayISO();
+  }
+  job.status = newCol;
+  persist();
+  render();
+}
+
+function renameJob(id, novoNome){
+  const job = jobs.find(j => j.id === id);
+  if(!job) return;
+  job.nome = novoNome.trim() || job.nome;
+  persist();
+  render();
+}
+
+function deleteJob(id){
+  jobs = jobs.filter(j => j.id !== id);
+  persist();
+  render();
+}
+
+function formatDatePt(d){
+  return d.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit'});
+}
+
+function render(){
+  const area = document.getElementById('board-area');
+  const board = document.createElement('div');
+  board.className = 'board';
+
+  COLUMNS.forEach(col => {
+    const colEl = document.createElement('div');
+    colEl.className = 'col';
+    const colJobs = jobs.filter(j => j.status === col.id).sort((a,b) => {
+      if(!a.recebido && !b.recebido) return 0;
+      if(!a.recebido) return 1;
+      if(!b.recebido) return -1;
+      const da = addBusinessDays(a.recebido,4), db2 = addBusinessDays(b.recebido,4);
+      return da - db2;
+    });
+
+    colEl.innerHTML = '<div class="col-head"><span class="col-title">' + col.label + '</span><span class="col-count">' + colJobs.length + '</span></div>';
+    const cardsWrap = document.createElement('div');
+    cardsWrap.className = 'cards';
+
+    if(colJobs.length === 0){
+      cardsWrap.innerHTML = '<div class="empty">Sem jobs</div>';
+    }
+
+    colJobs.forEach(job => {
+      const idx = COLUMNS.findIndex(c => c.id === col.id);
+      let ringHtml;
+      if(job.recebido){
+        const deadline = addBusinessDays(job.recebido, 4);
+        const daysLeft = businessDaysLeft(deadline);
+        const uc = urgencyColor(daysLeft);
+        let ringLabel = daysLeft < 0 ? 'ATR' : (daysLeft === 0 ? 'HOJE' : daysLeft + 'd');
+        const pct = Math.max(0, Math.min(1, (4 - Math.max(daysLeft,0)) / 4));
+        ringHtml = '<div class="ring" style="background:conic-gradient(' + uc.ring + ' ' + (pct*360) + 'deg, ' + uc.dim + ' 0deg);">' +
+          '<div class="ring-label" style="color:' + uc.text + ';font-size:' + (daysLeft<=0?'8px':'10px') + ';">' + ringLabel + '</div></div>';
+      } else {
+        ringHtml = '<div class="ring" style="background:var(--gray-dim);border:1px dashed var(--border-strong);">' +
+          '<div class="ring-label" style="color:var(--text-muted);font-size:9px;background:transparent;">—</div></div>';
+      }
+
+      const metaText = job.recebido
+        ? ('Decupagem ' + formatDatePt(new Date(job.recebido+'T00:00:00')) + ' → prazo ' + formatDatePt(addBusinessDays(job.recebido,4)))
+        : 'Aguardando decupagem';
+
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML =
+        '<div class="card-top">' +
+          '<div class="card-name" data-name>' + job.nome + '</div>' +
+          ringHtml +
+        '</div>' +
+        '<div class="meta">' + metaText + '</div>' +
+        '<div class="fmts" data-fmts></div>' +
+        '<div class="card-actions">' +
+          '<div class="movebtns">' +
+            '<button ' + (idx===0?'disabled style="opacity:0.3"':'') + ' data-move="-1">‹</button>' +
+            '<button ' + (idx===COLUMNS.length-1?'disabled style="opacity:0.3"':'') + ' data-move="1">›</button>' +
+          '</div>' +
+          '<div class="iconbtns">' +
+            '<button class="iconbtn" data-dup title="Duplicar">⧉</button>' +
+            '<button class="iconbtn delbtn" data-del title="Remover">✕</button>' +
+          '</div>' +
+        '</div>';
+
+      const nameEl = card.querySelector('[data-name]');
+      nameEl.addEventListener('click', () => {
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'card-name-input';
+        input.value = job.nome;
+        nameEl.replaceWith(input);
+        input.focus();
+        input.select();
+        const commit = () => renameJob(job.id, input.value);
+        input.addEventListener('blur', commit);
+        input.addEventListener('keydown', (e) => { if(e.key === 'Enter') input.blur(); });
+      });
+
+      const fmtsEl = card.querySelector('[data-fmts]');
+      job.formatos.forEach(fmt => {
+        const chip = document.createElement('label');
+        chip.className = 'fmt-chip' + (job.done[fmt] ? ' done' : '');
+        chip.innerHTML = '<input type="checkbox" ' + (job.done[fmt]?'checked':'') + '> ' + FMT_LABEL[fmt];
+        chip.querySelector('input').addEventListener('change', () => toggleFormat(job.id, fmt));
+        fmtsEl.appendChild(chip);
+      });
+
+      card.querySelectorAll('[data-move]').forEach(btn => {
+        btn.addEventListener('click', () => moveJob(job.id, parseInt(btn.getAttribute('data-move'))));
+      });
+      card.querySelector('[data-dup]').addEventListener('click', () => duplicateJob(job.id));
+      card.querySelector('[data-del]').addEventListener('click', () => {
+        if(confirm('Remover "' + job.nome + '" da esteira?')) deleteJob(job.id);
+      });
+
+      cardsWrap.appendChild(card);
+    });
+
+    colEl.appendChild(cardsWrap);
+    board.appendChild(colEl);
+  });
+
+  area.innerHTML = '';
+  area.appendChild(board);
+}
+
+initFirebase();
+</script>
+</body>
+</html>
