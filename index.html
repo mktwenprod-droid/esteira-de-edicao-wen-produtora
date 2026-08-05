@@ -31,6 +31,7 @@
     --shell-bg:#1A1A1A; --shell-border:rgba(255,255,255,0.08);
     --shell-shadow:0 30px 90px rgba(0,0,0,0.55), 0 10px 30px rgba(0,0,0,0.35);
     --page-bg:linear-gradient(180deg, #26123F 0%, #171233 55%, #0B0F26 100%);
+    --glossy-bg:rgba(42,39,53,0.55); --glossy-border:rgba(255,255,255,0.16);
   }
   :root[data-theme="light"]{
     color-scheme:light;
@@ -44,6 +45,7 @@
     --shell-bg:#FFFFFF; --shell-border:rgba(16,26,43,0.08);
     --shell-shadow:0 30px 80px rgba(30,20,60,0.20), 0 10px 24px rgba(30,20,60,0.12);
     --page-bg:linear-gradient(180deg, #ECE6FB 0%, #E7E9FA 45%, #F5F8FC 100%);
+    --glossy-bg:rgba(255,255,255,0.6); --glossy-border:rgba(16,26,43,0.14);
   }
   *{box-sizing:border-box;}
   html{min-height:100%;}
@@ -130,7 +132,7 @@
   .col-title{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:0.04em;color:var(--text);}
   .col-count{font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:var(--track);background:var(--track-dim);padding:2px 8px;border-radius:20px;}
   .cards{display:flex;flex-direction:column;gap:10px;}
-  .card{background:var(--panel-2);border:1px solid var(--border);border-radius:12px;padding:12px 12px 10px;transition:transform .15s ease,box-shadow .15s ease,border-color .25s ease;}
+  .card{background:var(--panel-2);border:1px solid var(--border);border-radius:12px;padding:12px 12px 10px;cursor:pointer;transition:transform .15s ease,box-shadow .15s ease,border-color .25s ease;}
   .card:hover{transform:translateY(-2px);box-shadow:0 10px 28px var(--card-glow, rgba(0,0,0,0.35));border-color:var(--border-strong);}
   .card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:8px;}
   .card-name{font-size:14px;font-weight:500;line-height:1.3;cursor:text;border-bottom:1px dashed transparent;}
@@ -168,6 +170,20 @@
   .modal-bg.open{display:flex;}
   .modal{background:var(--panel-2);border:1px solid var(--border-strong);border-radius:var(--radius);padding:22px;width:100%;max-width:380px;box-shadow:var(--shadow-lg);animation:modalIn .18s ease;}
   @keyframes modalIn{from{opacity:0;transform:translateY(6px) scale(.98);}to{opacity:1;transform:none;}}
+  .detail-modal{
+    background:var(--glossy-bg);border:1px solid var(--glossy-border);border-radius:var(--radius);
+    padding:22px;width:100%;max-width:440px;max-height:85vh;overflow-y:auto;
+    box-shadow:var(--shadow-lg);
+    backdrop-filter:blur(24px) saturate(160%);-webkit-backdrop-filter:blur(24px) saturate(160%);
+    animation:modalIn .18s ease;
+  }
+  .detail-top{display:flex;align-items:center;gap:14px;}
+  .detail-top-info{flex:1;min-width:0;}
+  .detail-name-input{width:100%;background:transparent;border:none;border-bottom:1px dashed var(--border);color:var(--text);font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:18px;padding:2px 0 6px;margin-bottom:4px;}
+  .detail-name-input:focus{outline:none;border-bottom-color:var(--primary);}
+  .detail-col-badge{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.03em;}
+  .detail-section{margin-top:18px;}
+  .detail-section-title{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:0.04em;color:var(--text-muted);margin-bottom:8px;}
   .modal h2{font-family:'Space Grotesk',sans-serif;font-size:16px;margin:0 0 16px;}
   .field{margin-bottom:14px;}
   .field label{display:block;font-size:12px;color:var(--text-muted);margin-bottom:6px;}
@@ -194,9 +210,9 @@
     .addbtn{padding:12px 18px;}
     .fmt-chip{padding:6px 10px;}
     .field input[type=text],.field input[type=date]{font-size:16px;padding:11px 10px;}
-    .modal{max-width:none;margin-top:auto;}
+    .modal,.detail-modal{max-width:none;margin-top:auto;}
     .modal-bg{align-items:flex-end;padding:0;}
-    .modal{border-radius:20px 20px 0 0;width:100%;padding-bottom:max(22px, env(safe-area-inset-bottom));animation:modalInMobile .2s ease;}
+    .modal,.detail-modal{border-radius:20px 20px 0 0;width:100%;max-height:88vh;padding-bottom:max(22px, env(safe-area-inset-bottom));animation:modalInMobile .2s ease;}
   }
   @keyframes modalInMobile{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:none;}}
 </style>
@@ -253,20 +269,11 @@
   </div>
 </div>
 
-<div class="modal-bg" id="attach-modal-bg">
-  <div class="modal">
-    <h2>Anexos</h2>
-    <div id="attach-list"></div>
-    <div class="field" style="margin-top:14px;">
-      <label>Adicionar link</label>
-      <div class="attach-link-row">
-        <input type="text" id="f-attach-link" placeholder="https://...">
-        <button class="btn-ghost" onclick="addLinkAttachment()">Adicionar</button>
-      </div>
-    </div>
-    <div class="hint" id="attach-upload-status"></div>
+<div class="modal-bg" id="detail-modal-bg">
+  <div class="detail-modal">
+    <div id="detail-body"></div>
     <div class="modal-actions">
-      <button class="btn-primary" onclick="closeAttachModal()">Concluído</button>
+      <button class="btn-ghost" onclick="closeDetailModal()">Fechar</button>
     </div>
   </div>
 </div>
@@ -310,7 +317,7 @@ let db = null;
 let docRef = null;
 let suppressNextWrite = false;
 let selectedMonth = 'all';
-let attachTargetId = null;
+let detailJobId = null;
 let collapsedCols = new Set();
 try{ collapsedCols = new Set(JSON.parse(localStorage.getItem('esteira-collapsed-cols') || '[]')); }catch(e){}
 
@@ -552,6 +559,11 @@ function renderMonthTabs(){
 
   const wrap = document.getElementById('month-tabs');
   wrap.innerHTML = '';
+  const allBtn = document.createElement('button');
+  allBtn.className = 'month-tab' + (selectedMonth === 'all' ? ' active' : '');
+  allBtn.textContent = 'Todos';
+  allBtn.addEventListener('click', () => { selectedMonth = 'all'; render(); });
+  wrap.appendChild(allBtn);
   sorted.forEach(key => {
     const btn = document.createElement('button');
     btn.className = 'month-tab' + (key === selectedMonth ? ' active' : '');
@@ -559,28 +571,94 @@ function renderMonthTabs(){
     btn.addEventListener('click', () => { selectedMonth = key; render(); });
     wrap.appendChild(btn);
   });
-  const allBtn = document.createElement('button');
-  allBtn.className = 'month-tab' + (selectedMonth === 'all' ? ' active' : '');
-  allBtn.textContent = 'Todos';
-  allBtn.addEventListener('click', () => { selectedMonth = 'all'; render(); });
-  wrap.appendChild(allBtn);
 }
 
-function openAttachModal(jobId){
-  attachTargetId = jobId;
-  document.getElementById('f-attach-link').value = '';
-  document.getElementById('attach-upload-status').textContent = '';
-  renderAttachList();
-  document.getElementById('attach-modal-bg').classList.add('open');
+function getJobVisual(job){
+  let ringHtml, stateColor, stateDim;
+  if(job.status === 'entregue'){
+    stateColor = 'var(--track)'; stateDim = 'var(--track-dim)';
+    ringHtml = '<div class="ring" style="background:var(--track);">' +
+      '<div class="ring-label" style="background:transparent;">' +
+      '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 12 10 18 20 6"></polyline></svg>' +
+      '</div></div>';
+  } else if(job.recebido){
+    const deadline = addBusinessDays(job.recebido, 4);
+    const daysLeft = businessDaysLeft(deadline);
+    const uc = urgencyColor(daysLeft);
+    stateColor = uc.ring; stateDim = uc.dim;
+    let ringLabel = daysLeft < 0 ? 'ATR' : (daysLeft === 0 ? 'HOJE' : daysLeft + 'd');
+    const pct = Math.max(0, Math.min(1, (4 - Math.max(daysLeft,0)) / 4));
+    ringHtml = '<div class="ring" style="background:conic-gradient(' + uc.ring + ' ' + (pct*360) + 'deg, ' + uc.dim + ' 0deg);">' +
+      '<div class="ring-label" style="color:' + uc.text + ';font-size:' + (daysLeft<=0?'8px':'10px') + ';">' + ringLabel + '</div></div>';
+  } else {
+    stateColor = null; stateDim = null;
+    ringHtml = '<div class="ring" style="background:var(--gray-dim);border:1px dashed var(--border-strong);">' +
+      '<div class="ring-label" style="color:var(--text-muted);font-size:9px;background:transparent;">—</div></div>';
+  }
+  const metaText = job.recebido
+    ? ('Decupagem ' + formatDatePt(new Date(job.recebido+'T00:00:00')) + ' → prazo ' + formatDatePt(addBusinessDays(job.recebido,4)))
+    : 'Aguardando decupagem';
+  return {ringHtml, stateColor, stateDim, metaText};
 }
-function closeAttachModal(){
-  document.getElementById('attach-modal-bg').classList.remove('open');
-  attachTargetId = null;
+
+function openDetailModal(jobId){
+  detailJobId = jobId;
+  renderDetailModal();
+  document.getElementById('detail-modal-bg').classList.add('open');
+}
+function closeDetailModal(){
+  document.getElementById('detail-modal-bg').classList.remove('open');
+  detailJobId = null;
   render();
 }
-function renderAttachList(){
-  const job = jobs.find(j => j.id === attachTargetId);
-  const wrap = document.getElementById('attach-list');
+function renderDetailModal(){
+  const job = jobs.find(j => j.id === detailJobId);
+  if(!job) return;
+  const col = COLUMNS.find(c => c.id === job.status);
+  const vis = getJobVisual(job);
+  const body = document.getElementById('detail-body');
+  body.innerHTML =
+    '<div class="detail-top">' +
+      vis.ringHtml +
+      '<div class="detail-top-info">' +
+        '<input class="detail-name-input" id="detail-name-input" type="text" value="' + escapeHtml(job.nome) + '">' +
+        '<div class="detail-col-badge">' + escapeHtml(col ? col.label : '') + '</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="meta" style="margin:14px 0 0;">' + vis.metaText + '</div>' +
+    '<div class="detail-section">' +
+      '<div class="detail-section-title">Formatos</div>' +
+      '<div class="checks" id="detail-formats"></div>' +
+    '</div>' +
+    '<div class="detail-section">' +
+      '<div class="detail-section-title">Anexos</div>' +
+      '<div id="detail-attach-list"></div>' +
+      '<div class="attach-link-row" style="margin-top:8px;">' +
+        '<input type="text" id="f-detail-attach-link" placeholder="https://...">' +
+        '<button class="btn-ghost" onclick="addLinkAttachment()">Adicionar</button>' +
+      '</div>' +
+      '<div class="hint" id="detail-attach-status"></div>' +
+    '</div>';
+
+  const nameInput = document.getElementById('detail-name-input');
+  nameInput.addEventListener('blur', () => renameJob(job.id, nameInput.value));
+  nameInput.addEventListener('keydown', e => { if(e.key === 'Enter') nameInput.blur(); });
+
+  const formatsEl = document.getElementById('detail-formats');
+  job.formatos.forEach(fmt => {
+    const label = document.createElement('label');
+    label.className = 'check';
+    label.innerHTML = '<input type="checkbox" ' + (job.done[fmt]?'checked':'') + '> ' + FMT_LABEL[fmt];
+    label.querySelector('input').addEventListener('change', () => { toggleFormat(job.id, fmt); renderDetailModal(); });
+    formatsEl.appendChild(label);
+  });
+
+  renderDetailAttachList();
+}
+function renderDetailAttachList(){
+  const job = jobs.find(j => j.id === detailJobId);
+  const wrap = document.getElementById('detail-attach-list');
+  if(!wrap) return;
   wrap.innerHTML = '';
   const list = (job && job.attachments) || [];
   if(list.length === 0){
@@ -598,33 +676,34 @@ function renderAttachList(){
   });
 }
 function addAttachmentToJob(att){
-  const job = jobs.find(j => j.id === attachTargetId);
+  const job = jobs.find(j => j.id === detailJobId);
   if(!job) return;
   if(!job.attachments) job.attachments = [];
   job.attachments.push(att);
   persist();
-  renderAttachList();
+  renderDetailAttachList();
 }
 function removeAttachment(index){
-  const job = jobs.find(j => j.id === attachTargetId);
+  const job = jobs.find(j => j.id === detailJobId);
   if(!job || !job.attachments) return;
   job.attachments.splice(index, 1);
   persist();
-  renderAttachList();
+  renderDetailAttachList();
 }
 function addLinkAttachment(){
-  const input = document.getElementById('f-attach-link');
+  const input = document.getElementById('f-detail-attach-link');
+  const statusEl = document.getElementById('detail-attach-status');
   const url = input.value.trim();
   if(!url) return;
   let parsed;
-  try{ parsed = new URL(url); }catch(e){ document.getElementById('attach-upload-status').textContent = 'Link inválido.'; return; }
+  try{ parsed = new URL(url); }catch(e){ statusEl.textContent = 'Link inválido.'; return; }
   if(parsed.protocol !== 'http:' && parsed.protocol !== 'https:'){
-    document.getElementById('attach-upload-status').textContent = 'Use um link http(s) válido.';
+    statusEl.textContent = 'Use um link http(s) válido.';
     return;
   }
   addAttachmentToJob({type:'link', name: parsed.hostname.replace(/^www\./,'') + parsed.pathname, url, addedAt: Date.now()});
   input.value = '';
-  document.getElementById('attach-upload-status').textContent = '';
+  statusEl.textContent = '';
 }
 
 function render(){
@@ -663,45 +742,21 @@ function render(){
 
     colJobs.forEach(job => {
       const idx = COLUMNS.findIndex(c => c.id === col.id);
-      let ringHtml, stateColor, stateDim;
-      if(col.id === 'entregue'){
-        stateColor = 'var(--track)'; stateDim = 'var(--track-dim)';
-        ringHtml = '<div class="ring" style="background:var(--track);">' +
-          '<div class="ring-label" style="background:transparent;">' +
-          '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 12 10 18 20 6"></polyline></svg>' +
-          '</div></div>';
-      } else if(job.recebido){
-        const deadline = addBusinessDays(job.recebido, 4);
-        const daysLeft = businessDaysLeft(deadline);
-        const uc = urgencyColor(daysLeft);
-        stateColor = uc.ring; stateDim = uc.dim;
-        let ringLabel = daysLeft < 0 ? 'ATR' : (daysLeft === 0 ? 'HOJE' : daysLeft + 'd');
-        const pct = Math.max(0, Math.min(1, (4 - Math.max(daysLeft,0)) / 4));
-        ringHtml = '<div class="ring" style="background:conic-gradient(' + uc.ring + ' ' + (pct*360) + 'deg, ' + uc.dim + ' 0deg);">' +
-          '<div class="ring-label" style="color:' + uc.text + ';font-size:' + (daysLeft<=0?'8px':'10px') + ';">' + ringLabel + '</div></div>';
-      } else {
-        stateColor = null; stateDim = null;
-        ringHtml = '<div class="ring" style="background:var(--gray-dim);border:1px dashed var(--border-strong);">' +
-          '<div class="ring-label" style="color:var(--text-muted);font-size:9px;background:transparent;">—</div></div>';
-      }
-
-      const metaText = job.recebido
-        ? ('Decupagem ' + formatDatePt(new Date(job.recebido+'T00:00:00')) + ' → prazo ' + formatDatePt(addBusinessDays(job.recebido,4)))
-        : 'Aguardando decupagem';
+      const vis = getJobVisual(job);
 
       const card = document.createElement('div');
       card.className = 'card';
-      if(stateColor){
-        card.style.borderColor = stateDim;
-        card.style.setProperty('--card-glow', stateDim);
+      if(vis.stateColor){
+        card.style.borderColor = vis.stateDim;
+        card.style.setProperty('--card-glow', vis.stateDim);
       }
-      const attCount = (job.attachments && job.attachments.length) || 0;
+      card.addEventListener('click', () => openDetailModal(job.id));
       card.innerHTML =
         '<div class="card-top">' +
           '<div class="card-name" data-name>' + escapeHtml(job.nome) + '</div>' +
-          ringHtml +
+          vis.ringHtml +
         '</div>' +
-        '<div class="meta">' + metaText + '</div>' +
+        '<div class="meta">' + vis.metaText + '</div>' +
         '<div class="fmts" data-fmts></div>' +
         '<div class="attachments" data-attachments></div>' +
         '<div class="card-actions">' +
@@ -710,16 +765,14 @@ function render(){
             '<button ' + (idx===COLUMNS.length-1?'disabled style="opacity:0.3"':'') + ' data-move="1">›</button>' +
           '</div>' +
           '<div class="iconbtns">' +
-            '<button class="iconbtn" data-attach title="Anexos' + (attCount ? ' (' + attCount + ')' : '') + '">' +
-              '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a5 5 0 0 1-7.07-7.07l9.19-9.19a3.5 3.5 0 0 1 4.95 4.95l-9.2 9.19a1.5 1.5 0 0 1-2.12-2.12l8.49-8.48"></path></svg>' +
-            '</button>' +
             '<button class="iconbtn" data-dup title="Duplicar">⧉</button>' +
             '<button class="iconbtn delbtn" data-del title="Remover">✕</button>' +
           '</div>' +
         '</div>';
 
       const nameEl = card.querySelector('[data-name]');
-      nameEl.addEventListener('click', () => {
+      nameEl.addEventListener('click', (e) => {
+        e.stopPropagation();
         const input = document.createElement('input');
         input.type = 'text';
         input.className = 'card-name-input';
@@ -727,6 +780,7 @@ function render(){
         nameEl.replaceWith(input);
         input.focus();
         input.select();
+        input.addEventListener('click', ev => ev.stopPropagation());
         const commit = () => renameJob(job.id, input.value);
         input.addEventListener('blur', commit);
         input.addEventListener('keydown', (e) => { if(e.key === 'Enter') input.blur(); });
@@ -737,6 +791,7 @@ function render(){
         const chip = document.createElement('label');
         chip.className = 'fmt-chip' + (job.done[fmt] ? ' done' : '');
         chip.innerHTML = '<input type="checkbox" ' + (job.done[fmt]?'checked':'') + '> ' + FMT_LABEL[fmt];
+        chip.addEventListener('click', e => e.stopPropagation());
         chip.querySelector('input').addEventListener('change', () => toggleFormat(job.id, fmt));
         fmtsEl.appendChild(chip);
       });
@@ -750,15 +805,16 @@ function render(){
         a.rel = 'noopener';
         a.title = att.name;
         a.innerHTML = ATT_ICONS[att.type] + '<span>' + escapeHtml(truncateText(att.name, 16)) + '</span>';
+        a.addEventListener('click', e => e.stopPropagation());
         attWrap.appendChild(a);
       });
 
       card.querySelectorAll('[data-move]').forEach(btn => {
-        btn.addEventListener('click', () => moveJob(job.id, parseInt(btn.getAttribute('data-move'))));
+        btn.addEventListener('click', (e) => { e.stopPropagation(); moveJob(job.id, parseInt(btn.getAttribute('data-move'))); });
       });
-      card.querySelector('[data-attach]').addEventListener('click', () => openAttachModal(job.id));
-      card.querySelector('[data-dup]').addEventListener('click', () => duplicateJob(job.id));
-      card.querySelector('[data-del]').addEventListener('click', () => {
+      card.querySelector('[data-dup]').addEventListener('click', (e) => { e.stopPropagation(); duplicateJob(job.id); });
+      card.querySelector('[data-del]').addEventListener('click', (e) => {
+        e.stopPropagation();
         if(confirm('Remover "' + job.nome + '" da esteira?')) deleteJob(job.id);
       });
 
