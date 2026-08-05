@@ -324,6 +324,7 @@ function monthLabel(key){
 function applyTheme(theme){
   document.documentElement.setAttribute('data-theme', theme);
   try{ localStorage.setItem('esteira-theme', theme); }catch(e){}
+  void document.body.offsetHeight;
 }
 function toggleTheme(){
   const current = document.documentElement.getAttribute('data-theme') || 'dark';
