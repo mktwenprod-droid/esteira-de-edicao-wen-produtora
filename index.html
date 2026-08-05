@@ -100,6 +100,10 @@
   .theme-toggle .icon-moon{display:none;}
   :root[data-theme="light"] .theme-toggle .icon-sun{display:none;}
   :root[data-theme="light"] .theme-toggle .icon-moon{display:block;}
+  .month-tabs{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 6px;margin-bottom:16px;-webkit-overflow-scrolling:touch;}
+  .month-tab{flex:none;font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:12.5px;padding:8px 15px;border-radius:999px;border:1px solid var(--glass-border);background:var(--glass-bg);color:var(--text-muted);cursor:pointer;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);transition:background-color .15s ease,color .15s ease,border-color .15s ease;white-space:nowrap;}
+  .month-tab:hover{color:var(--text);border-color:var(--border-strong);}
+  .month-tab.active{background:var(--primary);border-color:var(--primary);color:#fff;}
   .board{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;align-items:start;}
   @media(max-width:1100px){.board{grid-template-columns:repeat(2,1fr);}}
   @media(max-width:700px){
@@ -112,6 +116,12 @@
   }
   .col{background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:var(--radius);padding:12px;min-height:80px;backdrop-filter:blur(18px) saturate(140%);-webkit-backdrop-filter:blur(18px) saturate(140%);box-shadow:var(--shadow);transition:background-color .25s ease,border-color .25s ease;}
   .col-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding:0 2px;}
+  .col-head-left{display:flex;align-items:center;gap:6px;}
+  .col-collapse-btn{background:transparent;border:none;color:var(--text-muted);cursor:pointer;display:flex;align-items:center;justify-content:center;width:18px;height:18px;padding:0;flex:none;transition:transform .2s ease,color .15s ease;}
+  .col-collapse-btn:hover{color:var(--text);}
+  .col-collapse-btn svg{width:13px;height:13px;}
+  .col.collapsed .col-collapse-btn{transform:rotate(-90deg);}
+  .col.collapsed .cards{display:none;}
   .col-title{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:0.04em;color:var(--text);}
   .col-count{font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:var(--track);background:var(--track-dim);padding:2px 8px;border-radius:20px;}
   .cards{display:flex;flex-direction:column;gap:10px;}
@@ -128,6 +138,18 @@
   .fmt-chip{display:flex;align-items:center;gap:5px;font-size:11px;padding:4px 8px;border-radius:6px;background:var(--panel-3);border:1px solid var(--border);cursor:pointer;user-select:none;color:var(--text-muted);transition:background-color .2s ease,border-color .2s ease,color .2s ease;}
   .fmt-chip input{accent-color:var(--primary);width:12px;height:12px;margin:0;}
   .fmt-chip.done{color:var(--track);border-color:var(--track-dim);background:var(--track-dim);}
+  .attachments{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;}
+  .att-chip{display:flex;align-items:center;gap:5px;font-size:11px;padding:4px 8px;border-radius:6px;background:var(--panel-3);border:1px solid var(--border);color:var(--text-muted);text-decoration:none;max-width:150px;transition:border-color .15s ease,color .15s ease;}
+  .att-chip:hover{border-color:var(--primary);color:var(--text);}
+  .att-chip svg{width:12px;height:12px;flex:none;}
+  .att-chip span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .attach-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;}
+  .attach-row a{display:flex;align-items:center;gap:8px;color:var(--text);text-decoration:none;overflow:hidden;min-width:0;}
+  .attach-row a svg{flex:none;width:15px;height:15px;color:var(--text-muted);}
+  .attach-row a span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .attach-row a:hover{color:var(--primary);}
+  .attach-link-row{display:flex;gap:8px;}
+  .attach-link-row input{flex:1;}
   .card-actions{display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--border);padding-top:8px;}
   .movebtns{display:flex;gap:4px;}
   .movebtns button{background:transparent;border:1px solid var(--border);color:var(--text-muted);border-radius:6px;width:24px;height:24px;font-size:13px;cursor:pointer;line-height:1;}
@@ -162,6 +184,7 @@
   @media(max-width:700px){
     .movebtns button{width:34px;height:34px;font-size:16px;}
     .iconbtn{padding:6px;font-size:16px;}
+    .col-collapse-btn{width:28px;height:28px;}
     .theme-toggle{width:42px;height:42px;}
     .addbtn{padding:12px 18px;}
     .fmt-chip{padding:6px 10px;}
@@ -191,6 +214,7 @@
       <button class="addbtn" onclick="openModal()">+ Novo job</button>
     </div>
   </div>
+  <div class="month-tabs" id="month-tabs"></div>
   <div id="board-area"><div class="loading">Carregando jobs…</div></div>
 </div>
 
@@ -221,9 +245,32 @@
   </div>
 </div>
 
+<div class="modal-bg" id="attach-modal-bg">
+  <div class="modal">
+    <h2>Anexos</h2>
+    <div id="attach-list"></div>
+    <div class="field" style="margin-top:14px;">
+      <label>Adicionar arquivo ou foto</label>
+      <input type="file" id="f-attach-file" onchange="handleFileUpload()">
+    </div>
+    <div class="field">
+      <label>Ou colar um link</label>
+      <div class="attach-link-row">
+        <input type="text" id="f-attach-link" placeholder="https://...">
+        <button class="btn-ghost" onclick="addLinkAttachment()">Adicionar</button>
+      </div>
+    </div>
+    <div class="hint" id="attach-upload-status"></div>
+    <div class="modal-actions">
+      <button class="btn-primary" onclick="closeAttachModal()">Concluído</button>
+    </div>
+  </div>
+</div>
+
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
 <script>
 /* =========================================================
    CONFIGURAÇÃO DO FIREBASE — troque pelos valores do SEU projeto
@@ -251,10 +298,34 @@ const COLUMNS = [
   {id:'entregue', label:'Entregue'}
 ];
 const FMT_LABEL = {integra:'Íntegra', horizontal:'Corte H', vertical:'Corte V'};
+const MONTH_NAMES = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+const ATT_ICONS = {
+  photo: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="M21 15l-5-5L5 21"></path></svg>',
+  file: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>',
+  link: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>'
+};
 let jobs = [];
 let db = null;
+let storage = null;
 let docRef = null;
 let suppressNextWrite = false;
+let selectedMonth = null;
+let attachTargetId = null;
+let collapsedCols = new Set();
+try{ collapsedCols = new Set(JSON.parse(localStorage.getItem('esteira-collapsed-cols') || '[]')); }catch(e){}
+
+function escapeHtml(s){
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function truncateText(s, n){
+  s = String(s);
+  return s.length > n ? s.slice(0, n - 1) + '…' : s;
+}
+function monthKey(iso){ return iso.slice(0,7); }
+function monthLabel(key){
+  const parts = key.split('-');
+  return MONTH_NAMES[parseInt(parts[1],10)-1] + ' ' + parts[0];
+}
 
 function applyTheme(theme){
   document.documentElement.setAttribute('data-theme', theme);
@@ -298,6 +369,7 @@ function initFirebase(){
   try{
     firebase.initializeApp(firebaseConfig);
     db = firebase.firestore();
+    storage = firebase.storage();
     docRef = db.collection(DOC_PATH.collection).doc(DOC_PATH.doc);
     firebase.auth().signInAnonymously().catch(err => {
       setStatus('error', 'Erro na autenticação: ' + err.message);
@@ -400,7 +472,7 @@ function saveNewJob(){
   formatos.forEach(f => done[f] = false);
   jobs.push({
     id: 'job-' + Date.now() + '-' + Math.random().toString(36).slice(2,6),
-    nome, recebido: data, formatos, done,
+    nome, recebido: data, formatos, done, attachments: [],
     status: data ? 'recebido' : 'decupagem'
   });
   closeModal();
@@ -461,15 +533,132 @@ function formatDatePt(d){
   return d.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit'});
 }
 
+function toggleColumnCollapse(colId){
+  if(collapsedCols.has(colId)) collapsedCols.delete(colId); else collapsedCols.add(colId);
+  try{ localStorage.setItem('esteira-collapsed-cols', JSON.stringify([...collapsedCols])); }catch(e){}
+  render();
+}
+
+function jobMatchesMonth(job){
+  if(selectedMonth === 'all') return true;
+  if(!job.recebido) return true;
+  return monthKey(job.recebido) === selectedMonth;
+}
+
+function renderMonthTabs(){
+  const months = new Set([monthKey(todayISO())]);
+  jobs.forEach(j => { if(j.recebido) months.add(monthKey(j.recebido)); });
+  const sorted = [...months].sort().reverse();
+  if(!selectedMonth) selectedMonth = sorted[0];
+
+  const wrap = document.getElementById('month-tabs');
+  wrap.innerHTML = '';
+  sorted.forEach(key => {
+    const btn = document.createElement('button');
+    btn.className = 'month-tab' + (key === selectedMonth ? ' active' : '');
+    btn.textContent = monthLabel(key);
+    btn.addEventListener('click', () => { selectedMonth = key; render(); });
+    wrap.appendChild(btn);
+  });
+  const allBtn = document.createElement('button');
+  allBtn.className = 'month-tab' + (selectedMonth === 'all' ? ' active' : '');
+  allBtn.textContent = 'Todos';
+  allBtn.addEventListener('click', () => { selectedMonth = 'all'; render(); });
+  wrap.appendChild(allBtn);
+}
+
+function openAttachModal(jobId){
+  attachTargetId = jobId;
+  document.getElementById('f-attach-file').value = '';
+  document.getElementById('f-attach-link').value = '';
+  document.getElementById('attach-upload-status').textContent = '';
+  renderAttachList();
+  document.getElementById('attach-modal-bg').classList.add('open');
+}
+function closeAttachModal(){
+  document.getElementById('attach-modal-bg').classList.remove('open');
+  attachTargetId = null;
+  render();
+}
+function renderAttachList(){
+  const job = jobs.find(j => j.id === attachTargetId);
+  const wrap = document.getElementById('attach-list');
+  wrap.innerHTML = '';
+  const list = (job && job.attachments) || [];
+  if(list.length === 0){
+    wrap.innerHTML = '<div class="empty" style="padding:6px 0;">Nenhum anexo ainda</div>';
+    return;
+  }
+  list.forEach((att, i) => {
+    const row = document.createElement('div');
+    row.className = 'attach-row';
+    row.innerHTML =
+      '<a href="' + encodeURI(att.url) + '" target="_blank" rel="noopener">' + ATT_ICONS[att.type] + '<span>' + escapeHtml(att.name) + '</span></a>' +
+      '<button class="iconbtn delbtn" data-remove-att title="Remover">✕</button>';
+    row.querySelector('[data-remove-att]').addEventListener('click', () => removeAttachment(i));
+    wrap.appendChild(row);
+  });
+}
+function addAttachmentToJob(att){
+  const job = jobs.find(j => j.id === attachTargetId);
+  if(!job) return;
+  if(!job.attachments) job.attachments = [];
+  job.attachments.push(att);
+  persist();
+  renderAttachList();
+}
+function removeAttachment(index){
+  const job = jobs.find(j => j.id === attachTargetId);
+  if(!job || !job.attachments) return;
+  job.attachments.splice(index, 1);
+  persist();
+  renderAttachList();
+}
+function addLinkAttachment(){
+  const input = document.getElementById('f-attach-link');
+  const url = input.value.trim();
+  if(!url) return;
+  let parsed;
+  try{ parsed = new URL(url); }catch(e){ document.getElementById('attach-upload-status').textContent = 'Link inválido.'; return; }
+  if(parsed.protocol !== 'http:' && parsed.protocol !== 'https:'){
+    document.getElementById('attach-upload-status').textContent = 'Use um link http(s) válido.';
+    return;
+  }
+  addAttachmentToJob({type:'link', name: parsed.hostname.replace(/^www\./,'') + parsed.pathname, url, addedAt: Date.now()});
+  input.value = '';
+  document.getElementById('attach-upload-status').textContent = '';
+}
+function handleFileUpload(){
+  const input = document.getElementById('f-attach-file');
+  const file = input.files[0];
+  const statusEl = document.getElementById('attach-upload-status');
+  if(!file || !attachTargetId || !storage) return;
+  statusEl.textContent = 'Enviando ' + file.name + '…';
+  const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
+  const path = 'attachments/' + attachTargetId + '/' + Date.now() + '-' + safeName;
+  storage.ref(path).put(file)
+    .then(snap => snap.ref.getDownloadURL())
+    .then(url => {
+      addAttachmentToJob({type: file.type.indexOf('image/') === 0 ? 'photo' : 'file', name: file.name, url, addedAt: Date.now()});
+      statusEl.textContent = 'Anexo adicionado.';
+      input.value = '';
+    })
+    .catch(err => {
+      statusEl.textContent = 'Erro ao enviar: ' + err.message;
+    });
+}
+
 function render(){
+  renderMonthTabs();
   const area = document.getElementById('board-area');
   const board = document.createElement('div');
   board.className = 'board';
 
   COLUMNS.forEach(col => {
+    const isCollapsed = collapsedCols.has(col.id);
     const colEl = document.createElement('div');
-    colEl.className = 'col';
-    const colJobs = jobs.filter(j => j.status === col.id).sort((a,b) => {
+    colEl.className = 'col' + (isCollapsed ? ' collapsed' : '');
+    const colJobs = jobs.filter(j => j.status === col.id && jobMatchesMonth(j)).sort((a,b) => {
       if(!a.recebido && !b.recebido) return 0;
       if(!a.recebido) return 1;
       if(!b.recebido) return -1;
@@ -477,7 +666,15 @@ function render(){
       return da - db2;
     });
 
-    colEl.innerHTML = '<div class="col-head"><span class="col-title">' + col.label + '</span><span class="col-count">' + colJobs.length + '</span></div>';
+    colEl.innerHTML = '<div class="col-head">' +
+      '<div class="col-head-left">' +
+        '<button class="col-collapse-btn" data-collapse title="Recolher/expandir coluna">' +
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>' +
+        '</button>' +
+        '<span class="col-title">' + col.label + '</span>' +
+      '</div>' +
+      '<span class="col-count">' + colJobs.length + '</span></div>';
+    colEl.querySelector('[data-collapse]').addEventListener('click', () => toggleColumnCollapse(col.id));
     const cardsWrap = document.createElement('div');
     cardsWrap.className = 'cards';
 
@@ -519,19 +716,24 @@ function render(){
         card.style.borderColor = stateDim;
         card.style.setProperty('--card-glow', stateDim);
       }
+      const attCount = (job.attachments && job.attachments.length) || 0;
       card.innerHTML =
         '<div class="card-top">' +
-          '<div class="card-name" data-name>' + job.nome + '</div>' +
+          '<div class="card-name" data-name>' + escapeHtml(job.nome) + '</div>' +
           ringHtml +
         '</div>' +
         '<div class="meta">' + metaText + '</div>' +
         '<div class="fmts" data-fmts></div>' +
+        '<div class="attachments" data-attachments></div>' +
         '<div class="card-actions">' +
           '<div class="movebtns">' +
             '<button ' + (idx===0?'disabled style="opacity:0.3"':'') + ' data-move="-1">‹</button>' +
             '<button ' + (idx===COLUMNS.length-1?'disabled style="opacity:0.3"':'') + ' data-move="1">›</button>' +
           '</div>' +
           '<div class="iconbtns">' +
+            '<button class="iconbtn" data-attach title="Anexos' + (attCount ? ' (' + attCount + ')' : '') + '">' +
+              '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a5 5 0 0 1-7.07-7.07l9.19-9.19a3.5 3.5 0 0 1 4.95 4.95l-9.2 9.19a1.5 1.5 0 0 1-2.12-2.12l8.49-8.48"></path></svg>' +
+            '</button>' +
             '<button class="iconbtn" data-dup title="Duplicar">⧉</button>' +
             '<button class="iconbtn delbtn" data-del title="Remover">✕</button>' +
           '</div>' +
@@ -560,9 +762,22 @@ function render(){
         fmtsEl.appendChild(chip);
       });
 
+      const attWrap = card.querySelector('[data-attachments]');
+      (job.attachments || []).forEach(att => {
+        const a = document.createElement('a');
+        a.className = 'att-chip';
+        a.href = encodeURI(att.url);
+        a.target = '_blank';
+        a.rel = 'noopener';
+        a.title = att.name;
+        a.innerHTML = ATT_ICONS[att.type] + '<span>' + escapeHtml(truncateText(att.name, 16)) + '</span>';
+        attWrap.appendChild(a);
+      });
+
       card.querySelectorAll('[data-move]').forEach(btn => {
         btn.addEventListener('click', () => moveJob(job.id, parseInt(btn.getAttribute('data-move'))));
       });
+      card.querySelector('[data-attach]').addEventListener('click', () => openAttachModal(job.id));
       card.querySelector('[data-dup]').addEventListener('click', () => duplicateJob(job.id));
       card.querySelector('[data-del]').addEventListener('click', () => {
         if(confirm('Remover "' + job.nome + '" da esteira?')) deleteJob(job.id);
