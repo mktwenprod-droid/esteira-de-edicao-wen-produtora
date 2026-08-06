@@ -76,7 +76,7 @@
     display:flex;gap:20px;align-items:flex-start;max-width:1400px;margin:40px auto;
     padding-left:max(0px, env(safe-area-inset-left));padding-right:max(0px, env(safe-area-inset-right));
   }
-  .wrap{flex:1 1 auto;min-width:0;padding:28px 28px 44px;}
+  .wrap{flex:1 1 auto;min-width:0;width:100%;padding:28px 28px 44px;}
   .side-panel{flex:0 0 340px;padding:24px;position:sticky;top:40px;max-height:calc(100vh - 80px);overflow-y:auto;}
   .topbar{
     display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
@@ -257,6 +257,10 @@
     .modal,.detail-modal{max-width:none;margin-top:auto;}
     .modal-bg{align-items:flex-end;padding:0;}
     .modal,.detail-modal{border-radius:20px 20px 0 0;width:100%;max-height:88vh;padding-bottom:max(22px, env(safe-area-inset-bottom));animation:modalInMobile .2s ease;}
+    .cal-nav-btn{width:34px;height:34px;font-size:16px;}
+    .cal-view-btn{padding:9px 4px;font-size:12.5px;}
+    .cal-day-cell{font-size:13px;}
+    .cal-menu{min-width:200px;}
   }
   @keyframes modalInMobile{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:none;}}
 </style>
