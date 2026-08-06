@@ -232,8 +232,11 @@
   .field{margin-bottom:14px;}
   .field label{display:block;font-size:12px;color:var(--text-muted);margin-bottom:6px;}
   .field .hint{font-size:11px;color:var(--text-muted);margin-top:5px;}
-  .field input[type=text],.field input[type=date]{width:100%;background:var(--panel-2);border:1px solid var(--border);color:var(--text);border-radius:7px;padding:9px 10px;font-family:'Inter',sans-serif;font-size:13px;}
-  .field input[type=text]:focus,.field input[type=date]:focus{outline:none;border-color:var(--primary);}
+  .field input[type=text],.field input[type=date],.field input[type=password]{width:100%;background:var(--panel-2);border:1px solid var(--border);color:var(--text);border-radius:7px;padding:9px 10px;font-family:'Inter',sans-serif;font-size:13px;}
+  .field input[type=text]:focus,.field input[type=date]:focus,.field input[type=password]:focus{outline:none;border-color:var(--primary);}
+  .auth-controls-inner{display:flex;align-items:center;gap:8px;}
+  .editor-badge{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-muted);max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  @media(max-width:620px){.editor-badge{display:none;}}
   .checks{display:flex;gap:10px;flex-wrap:wrap;}
   .check{display:flex;align-items:center;gap:6px;font-size:13px;background:var(--panel-2);padding:7px 10px;border-radius:7px;border:1px solid var(--border);cursor:pointer;}
   .check input{accent-color:var(--primary);}
@@ -253,7 +256,7 @@
     .theme-toggle{width:42px;height:42px;}
     .addbtn{padding:12px 18px;}
     .fmt-chip{padding:6px 10px;}
-    .field input[type=text],.field input[type=date]{font-size:16px;padding:11px 10px;}
+    .field input[type=text],.field input[type=date],.field input[type=password]{font-size:16px;padding:11px 10px;}
     .modal,.detail-modal{max-width:none;margin-top:auto;}
     .modal-bg{align-items:flex-end;padding:0;}
     .modal,.detail-modal{border-radius:20px 20px 0 0;width:100%;max-height:88vh;padding-bottom:max(22px, env(safe-area-inset-bottom));animation:modalInMobile .2s ease;}
@@ -280,11 +283,12 @@
       </div>
     </div>
     <div class="topbar-actions">
+      <div id="auth-controls"></div>
       <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" title="Alternar tema" aria-label="Alternar tema claro/escuro">
         <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path></svg>
         <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
       </button>
-      <button class="addbtn" onclick="openModal()">+ Novo job</button>
+      <button class="addbtn" id="addbtn" onclick="openModal()" style="display:none;">+ Novo job</button>
     </div>
   </div>
   <div class="month-tabs" id="month-tabs"></div>
@@ -340,6 +344,25 @@
   </div>
 </div>
 
+<div class="modal-bg" id="login-modal-bg">
+  <div class="modal">
+    <h2>Entrar como editor</h2>
+    <div class="field">
+      <label>E-mail</label>
+      <input type="text" id="f-login-email" placeholder="voce@exemplo.com" autocomplete="username">
+    </div>
+    <div class="field">
+      <label>Senha</label>
+      <input type="password" id="f-login-password" placeholder="••••••••" autocomplete="current-password">
+      <div class="hint" id="login-error"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeLoginModal()">Cancelar</button>
+      <button class="btn-primary" onclick="submitLogin()">Entrar</button>
+    </div>
+  </div>
+</div>
+
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
@@ -387,6 +410,7 @@ let jobs = [];
 let db = null;
 let docRef = null;
 let suppressNextWrite = false;
+let jobsListenerAttached = false;
 let selectedMonth = 'all';
 let detailJobId = null;
 let gcalAccounts = [];
@@ -460,13 +484,63 @@ function initFirebase(){
     firebase.auth().onAuthStateChanged(user => {
       if(user){
         setStatus('online', 'Sincronizado');
-        listenJobs();
+        if(!jobsListenerAttached){
+          jobsListenerAttached = true;
+          listenJobs();
+        }
+        renderAuthControls();
+        render();
       }
     });
   }catch(e){
     setStatus('error', 'Erro ao iniciar Firebase');
     console.error(e);
   }
+}
+
+function isEditor(){
+  const u = firebase.auth().currentUser;
+  return !!(u && !u.isAnonymous);
+}
+
+function renderAuthControls(){
+  const el = document.getElementById('auth-controls');
+  const addBtn = document.getElementById('addbtn');
+  if(!el) return;
+  if(isEditor()){
+    const email = firebase.auth().currentUser.email || '';
+    el.innerHTML = '<div class="auth-controls-inner"><span class="editor-badge" title="' + escapeHtml(email) + '">' + escapeHtml(email) + '</span>' +
+      '<button class="btn-ghost" data-logout>Sair</button></div>';
+    el.querySelector('[data-logout]').addEventListener('click', logoutEditor);
+    if(addBtn) addBtn.style.display = '';
+  } else {
+    el.innerHTML = '<button class="btn-ghost" onclick="openLoginModal()">Entrar</button>';
+    if(addBtn) addBtn.style.display = 'none';
+  }
+}
+
+function openLoginModal(){
+  document.getElementById('f-login-email').value = '';
+  document.getElementById('f-login-password').value = '';
+  document.getElementById('login-error').textContent = '';
+  document.getElementById('login-modal-bg').classList.add('open');
+  document.getElementById('f-login-email').focus();
+}
+function closeLoginModal(){
+  document.getElementById('login-modal-bg').classList.remove('open');
+}
+function submitLogin(){
+  const email = document.getElementById('f-login-email').value.trim();
+  const pass = document.getElementById('f-login-password').value;
+  const errEl = document.getElementById('login-error');
+  errEl.textContent = '';
+  if(!email || !pass){ errEl.textContent = 'Preencha e-mail e senha.'; return; }
+  firebase.auth().signInWithEmailAndPassword(email, pass)
+    .then(() => { closeLoginModal(); })
+    .catch(() => { errEl.textContent = 'E-mail ou senha inválidos.'; });
+}
+function logoutEditor(){
+  firebase.auth().signOut().then(() => firebase.auth().signInAnonymously());
 }
 
 function listenJobs(){
@@ -690,6 +764,7 @@ function closeDetailModal(){
 function renderDetailModal(){
   const job = jobs.find(j => j.id === detailJobId);
   if(!job) return;
+  const editable = isEditor();
   const col = COLUMNS.find(c => c.id === job.status);
   const vis = getJobVisual(job);
   const body = document.getElementById('detail-body');
@@ -697,7 +772,7 @@ function renderDetailModal(){
     '<div class="detail-top">' +
       vis.ringHtml +
       '<div class="detail-top-info">' +
-        '<input class="detail-name-input" id="detail-name-input" type="text" value="' + escapeHtml(job.nome) + '">' +
+        '<input class="detail-name-input" id="detail-name-input" type="text" value="' + escapeHtml(job.nome) + '"' + (editable?'':' readonly') + '>' +
         '<div class="detail-col-badge">' + escapeHtml(col ? col.label : '') + '</div>' +
       '</div>' +
     '</div>' +
@@ -709,23 +784,29 @@ function renderDetailModal(){
     '<div class="detail-section">' +
       '<div class="detail-section-title">Anexos</div>' +
       '<div id="detail-attach-list"></div>' +
-      '<div class="attach-link-row" style="margin-top:8px;">' +
-        '<input type="text" id="f-detail-attach-link" placeholder="https://...">' +
-        '<button class="btn-ghost" onclick="addLinkAttachment()">Adicionar</button>' +
-      '</div>' +
-      '<div class="hint" id="detail-attach-status"></div>' +
+      (editable ?
+        '<div class="attach-link-row" style="margin-top:8px;">' +
+          '<input type="text" id="f-detail-attach-link" placeholder="https://...">' +
+          '<button class="btn-ghost" onclick="addLinkAttachment()">Adicionar</button>' +
+        '</div>' +
+        '<div class="hint" id="detail-attach-status"></div>'
+        : '') +
     '</div>';
 
   const nameInput = document.getElementById('detail-name-input');
-  nameInput.addEventListener('blur', () => renameJob(job.id, nameInput.value));
-  nameInput.addEventListener('keydown', e => { if(e.key === 'Enter') nameInput.blur(); });
+  if(editable){
+    nameInput.addEventListener('blur', () => renameJob(job.id, nameInput.value));
+    nameInput.addEventListener('keydown', e => { if(e.key === 'Enter') nameInput.blur(); });
+  }
 
   const formatsEl = document.getElementById('detail-formats');
   job.formatos.forEach(fmt => {
     const label = document.createElement('label');
     label.className = 'check';
-    label.innerHTML = '<input type="checkbox" ' + (job.done[fmt]?'checked':'') + '> ' + FMT_LABEL[fmt];
-    label.querySelector('input').addEventListener('change', () => { toggleFormat(job.id, fmt); renderDetailModal(); });
+    label.innerHTML = '<input type="checkbox" ' + (job.done[fmt]?'checked':'') + (editable?'':' disabled') + '> ' + FMT_LABEL[fmt];
+    if(editable){
+      label.querySelector('input').addEventListener('change', () => { toggleFormat(job.id, fmt); renderDetailModal(); });
+    }
     formatsEl.appendChild(label);
   });
 
@@ -735,6 +816,7 @@ function renderDetailAttachList(){
   const job = jobs.find(j => j.id === detailJobId);
   const wrap = document.getElementById('detail-attach-list');
   if(!wrap) return;
+  const editable = isEditor();
   wrap.innerHTML = '';
   const list = (job && job.attachments) || [];
   if(list.length === 0){
@@ -746,8 +828,8 @@ function renderDetailAttachList(){
     row.className = 'attach-row';
     row.innerHTML =
       '<a href="' + encodeURI(att.url) + '" target="_blank" rel="noopener">' + ATT_ICONS[att.type] + '<span>' + escapeHtml(att.name) + '</span></a>' +
-      '<button class="iconbtn delbtn" data-remove-att title="Remover">✕</button>';
-    row.querySelector('[data-remove-att]').addEventListener('click', () => removeAttachment(i));
+      (editable ? '<button class="iconbtn delbtn" data-remove-att title="Remover">✕</button>' : '');
+    if(editable) row.querySelector('[data-remove-att]').addEventListener('click', () => removeAttachment(i));
     wrap.appendChild(row);
   });
 }
@@ -816,6 +898,7 @@ function render(){
       cardsWrap.innerHTML = '<div class="empty">Sem jobs</div>';
     }
 
+    const editable = isEditor();
     colJobs.forEach(job => {
       const idx = COLUMNS.findIndex(c => c.id === col.id);
       const vis = getJobVisual(job);
@@ -835,40 +918,44 @@ function render(){
         '<div class="meta">' + vis.metaText + '</div>' +
         '<div class="fmts" data-fmts></div>' +
         '<div class="attachments" data-attachments></div>' +
-        '<div class="card-actions">' +
-          '<div class="movebtns">' +
-            '<button ' + (idx===0?'disabled style="opacity:0.3"':'') + ' data-move="-1">‹</button>' +
-            '<button ' + (idx===COLUMNS.length-1?'disabled style="opacity:0.3"':'') + ' data-move="1">›</button>' +
-          '</div>' +
-          '<div class="iconbtns">' +
-            '<button class="iconbtn" data-dup title="Duplicar">⧉</button>' +
-            '<button class="iconbtn delbtn" data-del title="Remover">✕</button>' +
-          '</div>' +
-        '</div>';
+        (editable ?
+          '<div class="card-actions">' +
+            '<div class="movebtns">' +
+              '<button ' + (idx===0?'disabled style="opacity:0.3"':'') + ' data-move="-1">‹</button>' +
+              '<button ' + (idx===COLUMNS.length-1?'disabled style="opacity:0.3"':'') + ' data-move="1">›</button>' +
+            '</div>' +
+            '<div class="iconbtns">' +
+              '<button class="iconbtn" data-dup title="Duplicar">⧉</button>' +
+              '<button class="iconbtn delbtn" data-del title="Remover">✕</button>' +
+            '</div>' +
+          '</div>'
+          : '');
 
       const nameEl = card.querySelector('[data-name]');
-      nameEl.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const input = document.createElement('input');
-        input.type = 'text';
-        input.className = 'card-name-input';
-        input.value = job.nome;
-        nameEl.replaceWith(input);
-        input.focus();
-        input.select();
-        input.addEventListener('click', ev => ev.stopPropagation());
-        const commit = () => renameJob(job.id, input.value);
-        input.addEventListener('blur', commit);
-        input.addEventListener('keydown', (e) => { if(e.key === 'Enter') input.blur(); });
-      });
+      if(editable){
+        nameEl.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const input = document.createElement('input');
+          input.type = 'text';
+          input.className = 'card-name-input';
+          input.value = job.nome;
+          nameEl.replaceWith(input);
+          input.focus();
+          input.select();
+          input.addEventListener('click', ev => ev.stopPropagation());
+          const commit = () => renameJob(job.id, input.value);
+          input.addEventListener('blur', commit);
+          input.addEventListener('keydown', (e) => { if(e.key === 'Enter') input.blur(); });
+        });
+      }
 
       const fmtsEl = card.querySelector('[data-fmts]');
       job.formatos.forEach(fmt => {
         const chip = document.createElement('label');
         chip.className = 'fmt-chip' + (job.done[fmt] ? ' done' : '');
-        chip.innerHTML = '<input type="checkbox" ' + (job.done[fmt]?'checked':'') + '> ' + FMT_LABEL[fmt];
+        chip.innerHTML = '<input type="checkbox" ' + (job.done[fmt]?'checked':'') + (editable?'':' disabled') + '> ' + FMT_LABEL[fmt];
         chip.addEventListener('click', e => e.stopPropagation());
-        chip.querySelector('input').addEventListener('change', () => toggleFormat(job.id, fmt));
+        if(editable) chip.querySelector('input').addEventListener('change', () => toggleFormat(job.id, fmt));
         fmtsEl.appendChild(chip);
       });
 
@@ -885,14 +972,16 @@ function render(){
         attWrap.appendChild(a);
       });
 
-      card.querySelectorAll('[data-move]').forEach(btn => {
-        btn.addEventListener('click', (e) => { e.stopPropagation(); moveJob(job.id, parseInt(btn.getAttribute('data-move'))); });
-      });
-      card.querySelector('[data-dup]').addEventListener('click', (e) => { e.stopPropagation(); duplicateJob(job.id); });
-      card.querySelector('[data-del]').addEventListener('click', (e) => {
-        e.stopPropagation();
-        if(confirm('Remover "' + job.nome + '" da esteira?')) deleteJob(job.id);
-      });
+      if(editable){
+        card.querySelectorAll('[data-move]').forEach(btn => {
+          btn.addEventListener('click', (e) => { e.stopPropagation(); moveJob(job.id, parseInt(btn.getAttribute('data-move'))); });
+        });
+        card.querySelector('[data-dup]').addEventListener('click', (e) => { e.stopPropagation(); duplicateJob(job.id); });
+        card.querySelector('[data-del]').addEventListener('click', (e) => {
+          e.stopPropagation();
+          if(confirm('Remover "' + job.nome + '" da esteira?')) deleteJob(job.id);
+        });
+      }
 
       cardsWrap.appendChild(card);
     });

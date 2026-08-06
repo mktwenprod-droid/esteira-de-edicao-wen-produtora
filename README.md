@@ -8,18 +8,19 @@ Quadro kanban para acompanhar jobs de edição de vídeo (decupagem → recebido
 
 1. Acesse [console.firebase.google.com](https://console.firebase.google.com) e crie um projeto novo (pode ser gratuito, plano Spark).
 2. No menu lateral, vá em **Firestore Database** → **Criar banco de dados** → escolha uma localização → modo **produção**.
-3. Vá em **Authentication** → aba **Sign-in method** → ative o provedor **Anônimo**.
+3. Vá em **Authentication** → aba **Sign-in method** → ative os provedores **Anônimo** e **E-mail/senha** (os dois — o anônimo é o que dá acesso de visualização a quem só tem o link, tipo clientes; o e-mail/senha é o login da equipe que edita).
 4. Vá em **Configurações do projeto** (ícone de engrenagem) → **Seus apps** → clique no ícone `</>` (Web) para registrar um app.
 5. Copie o objeto `firebaseConfig` que aparece.
 6. Abra o [index.html](index.html) deste projeto, procure o bloco `CONFIGURAÇÃO DO FIREBASE` (perto do fim do arquivo) e substitua os valores de exemplo pelos que você copiou.
-7. Em **Firestore Database → Regras**, cole as regras abaixo (exige login, mesmo anônimo, para ler/escrever — evita que qualquer pessoa na internet acesse seus dados sem passar pelo app):
+7. Em **Firestore Database → Regras**, cole as regras abaixo. Elas liberam **leitura** pra qualquer pessoa que abra o link (inclusive anônima, ou seja, clientes) mas só liberam **escrita** pra quem estiver logado com e-mail/senha (ou seja, editores) — a proteção acontece no banco de dados, não só na tela:
 
 ```
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     match /esteira-edicao/{docId} {
-      allow read, write: if request.auth != null;
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.token.firebase.sign_in_provider != 'anonymous';
     }
   }
 }
@@ -29,6 +30,19 @@ service cloud.firestore {
 9. Faça commit e push da alteração no `index.html` (com suas chaves reais) para o GitHub — veja a seção abaixo.
 
 > A `apiKey` do Firebase para apps Web não é um segredo (ela só identifica o projeto); quem protege os dados de verdade são as regras do Firestore acima, por isso é normal ela ficar visível no código publicado.
+
+## Editores x visualizadores (clientes)
+
+Qualquer pessoa que abrir o link consegue **ver** o quadro (inclusive clientes, sem precisar de conta ou senha) — mas só consegue **editar** quem tiver feito login como editor. Os botões de criar, mover, editar e excluir job ficam escondidos pra quem não é editor, e mesmo que alguém tente forçar pelo console do navegador, as regras do Firestore acima bloqueiam a escrita de verdade.
+
+Para criar uma conta de editor (você mesmo ou alguém da equipe):
+
+1. No console do Firebase, vá em **Authentication → Users → Add user**.
+2. Preencha um e-mail e uma senha para essa pessoa e clique em **Add user**.
+3. Repita para cada pessoa da equipe que precisa editar.
+4. No site, clique em **Entrar** (canto superior direito) e faça login com esse e-mail e senha.
+
+Não existe cadastro público — só quem você criar manualmente no Firebase consegue editar. Para enviar o link só de visualização a um cliente, basta mandar a URL normal do site; ele nunca vê o botão "Entrar" fazer diferença, só não vê os controles de edição.
 
 ## Anexos
 
