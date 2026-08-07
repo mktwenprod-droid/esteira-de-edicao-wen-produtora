@@ -478,10 +478,17 @@ function initFirebase(){
     firebase.initializeApp(firebaseConfig);
     db = firebase.firestore();
     docRef = db.collection(DOC_PATH.collection).doc(DOC_PATH.doc);
-    firebase.auth().signInAnonymously().catch(err => {
-      setStatus('error', 'Erro na autenticação: ' + err.message);
-    });
+    let initialAuthChecked = false;
     firebase.auth().onAuthStateChanged(user => {
+      if(!initialAuthChecked){
+        initialAuthChecked = true;
+        if(!user){
+          firebase.auth().signInAnonymously().catch(err => {
+            setStatus('error', 'Erro na autenticação: ' + err.message);
+          });
+          return;
+        }
+      }
       if(user){
         setStatus('online', 'Sincronizado');
         if(!jobsListenerAttached){
