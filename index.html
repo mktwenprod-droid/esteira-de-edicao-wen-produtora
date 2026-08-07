@@ -73,19 +73,19 @@
   @media (prefers-reduced-motion: reduce){ body::before{ animation:none; } }
   .shell{background:var(--shell-bg);border:1px solid var(--shell-border);border-radius:28px;box-shadow:var(--shell-shadow);transition:border-color .25s ease;}
   .shell-row{
-    display:flex;gap:20px;align-items:flex-start;max-width:1400px;margin:40px auto;
+    display:flex;gap:20px;align-items:flex-start;max-width:1520px;margin:40px auto;
     padding-left:max(0px, env(safe-area-inset-left));padding-right:max(0px, env(safe-area-inset-right));
   }
   .wrap{flex:1 1 auto;min-width:0;width:100%;padding:28px 28px 44px;}
-  .side-panel{flex:0 0 340px;padding:24px;position:sticky;top:40px;max-height:calc(100vh - 80px);overflow-y:auto;}
+  .side-panel{flex:0 0 440px;padding:28px;position:sticky;top:40px;max-height:calc(100vh - 80px);overflow-y:auto;}
   .topbar{
     display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
     padding-bottom:18px;margin-bottom:22px;border-bottom:1px solid var(--border);
   }
-  @media(max-width:1150px){ .side-panel{flex-basis:290px;} }
-  @media(max-width:900px){
+  @media(max-width:1300px){ .side-panel{flex-basis:380px;} }
+  @media(max-width:1050px){
     .shell-row{flex-direction:column;margin:20px auto;gap:16px;}
-    .side-panel{position:static;max-height:none;width:100%;flex-basis:auto;}
+    .side-panel{position:static;max-height:none;width:100%;flex-basis:auto;max-width:520px;}
   }
   @media(max-width:700px){
     .shell-row{margin:14px;}
@@ -192,27 +192,27 @@
   .detail-section{margin-top:18px;}
   .detail-section-title{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:0.04em;color:var(--text-muted);margin-bottom:8px;}
   .cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
-  .cal-title{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:15px;color:var(--text);}
+  .cal-title{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:17px;color:var(--text);}
   .cal-event{padding:8px 0;border-bottom:1px solid var(--border);}
   .cal-event:last-child{border-bottom:none;}
   .cal-event-date{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--track);margin-bottom:3px;}
   .cal-event-title{font-size:13px;color:var(--text);line-height:1.3;}
-  .cal-nav{display:flex;align-items:center;gap:8px;margin-bottom:12px;}
-  .cal-nav-btn{background:transparent;border:1px solid var(--border);color:var(--text-muted);border-radius:6px;width:26px;height:26px;flex:none;cursor:pointer;font-size:14px;line-height:1;}
+  .cal-nav{display:flex;align-items:center;gap:10px;margin-bottom:16px;}
+  .cal-nav-btn{background:transparent;border:1px solid var(--border);color:var(--text-muted);border-radius:8px;width:32px;height:32px;flex:none;cursor:pointer;font-size:16px;line-height:1;}
   .cal-nav-btn:hover{border-color:var(--border-strong);color:var(--text);}
-  .cal-period-label{flex:1;text-align:center;font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:12.5px;color:var(--text);text-transform:capitalize;}
-  .cal-view-toggle{display:flex;gap:6px;margin-bottom:14px;}
-  .cal-view-btn{flex:1;font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:11.5px;padding:6px 4px;border-radius:8px;border:1px solid var(--border);background:var(--panel);color:var(--text-muted);cursor:pointer;}
+  .cal-period-label{flex:1;text-align:center;font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:15px;color:var(--text);text-transform:capitalize;}
+  .cal-view-toggle{display:flex;gap:8px;margin-bottom:18px;}
+  .cal-view-btn{flex:1;font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:13px;padding:9px 6px;border-radius:9px;border:1px solid var(--border);background:var(--panel);color:var(--text-muted);cursor:pointer;}
   .cal-view-btn:hover{color:var(--text);}
   .cal-view-btn.active{background:var(--primary);border-color:var(--primary);color:#fff;}
-  .cal-month-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
-  .cal-weekday{font-family:'IBM Plex Mono',monospace;font-size:10px;text-align:center;color:var(--text-muted);padding-bottom:4px;}
-  .cal-day-cell{aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:8px;cursor:pointer;font-size:11.5px;color:var(--text);background:var(--panel-3);border:none;font-family:'Inter',sans-serif;}
+  .cal-month-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;}
+  .cal-weekday{font-family:'IBM Plex Mono',monospace;font-size:12px;text-align:center;color:var(--text-muted);padding-bottom:8px;}
+  .cal-day-cell{aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:10px;cursor:pointer;font-size:15px;color:var(--text);background:var(--panel-3);border:none;font-family:'Inter',sans-serif;}
   .cal-day-cell:hover{background:var(--panel-2);}
   .cal-day-cell.outside{color:var(--text-muted);opacity:0.4;}
   .cal-day-cell.today{background:var(--primary);color:#fff;font-weight:700;}
-  .cal-day-dots{display:flex;gap:2px;margin-top:3px;height:4px;}
-  .cal-day-dot{width:4px;height:4px;border-radius:50%;background:var(--track);}
+  .cal-day-dots{display:flex;gap:3px;margin-top:4px;height:5px;}
+  .cal-day-dot{width:5px;height:5px;border-radius:50%;background:var(--track);}
   .cal-day-cell.today .cal-day-dot{background:#fff;}
   .cal-week-day{margin-bottom:14px;}
   .cal-week-day-head{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:12px;color:var(--text);margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid var(--border);text-transform:capitalize;}
@@ -260,9 +260,6 @@
     .modal,.detail-modal{max-width:none;margin-top:auto;}
     .modal-bg{align-items:flex-end;padding:0;}
     .modal,.detail-modal{border-radius:20px 20px 0 0;width:100%;max-height:88vh;padding-bottom:max(22px, env(safe-area-inset-bottom));animation:modalInMobile .2s ease;}
-    .cal-nav-btn{width:34px;height:34px;font-size:16px;}
-    .cal-view-btn{padding:9px 4px;font-size:12.5px;}
-    .cal-day-cell{font-size:13px;}
     .cal-menu{min-width:200px;}
   }
   @keyframes modalInMobile{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:none;}}
