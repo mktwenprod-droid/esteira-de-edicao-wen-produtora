@@ -243,6 +243,7 @@
   .cal-week-day-head{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:12px;color:var(--text);margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid var(--border);text-transform:capitalize;}
   .cal-week-day-head.today{color:var(--primary);}
   .cal-empty-day{color:var(--text-muted);font-size:12px;padding:4px 0;}
+  .cal-connect-btn{width:100%;}
   .cal-menu-wrap{position:relative;}
   .cal-menu{position:absolute;top:calc(100% + 6px);right:0;min-width:230px;background:var(--panel-2);border:1px solid var(--border-strong);border-radius:12px;box-shadow:var(--shadow-lg);padding:8px;display:none;z-index:6;}
   .cal-menu.open{display:block;}
@@ -504,6 +505,7 @@ let detailJobId = null;
 let gcalAccounts = [];
 let calMenuOpen = false;
 let googleLibLoaded = false;
+let reconnectNeeded = false;
 let calView = 'month';
 let calRefDate = new Date();
 let calEvents = [];
@@ -1327,6 +1329,34 @@ function tryAutoReconnect(){
   const remembered = rememberedAccountEmails();
   if(remembered.length === 0){ refreshCalendar(); return; }
   let pending = remembered.length;
+  let anyFailed = false;
+  remembered.forEach(email => {
+    requestGoogleToken({
+      hint: email,
+      prompt: 'none',
+      onSuccess: (token) => {
+        gcalAccounts.push({email, accessToken: token});
+        pending--;
+        if(pending === 0){ refreshCalendar(); }
+      },
+      onError: () => {
+        anyFailed = true;
+        pending--;
+        if(pending === 0){
+          reconnectNeeded = anyFailed && gcalAccounts.length === 0;
+          refreshCalendar();
+        }
+      }
+    });
+  });
+}
+
+function reconnectRemembered(){
+  const remembered = rememberedAccountEmails();
+  if(remembered.length === 0) return;
+  const grid = document.getElementById('cal-grid');
+  if(grid) grid.innerHTML = '<div class="loading">Reconectando…</div>';
+  let pending = remembered.length;
   remembered.forEach(email => {
     requestGoogleToken({
       hint: email,
@@ -1334,7 +1364,7 @@ function tryAutoReconnect(){
       onSuccess: (token) => {
         gcalAccounts.push({email, accessToken: token});
         pending--;
-        if(pending === 0){ refreshCalendar(); }
+        if(pending === 0){ reconnectNeeded = false; refreshCalendar(); }
       },
       onError: () => {
         pending--;
@@ -1489,6 +1519,11 @@ function loadCalEvents(){
 function renderCalGrid(){
   const grid = document.getElementById('cal-grid');
   if(!grid) return;
+  if(reconnectNeeded && gcalAccounts.length === 0){
+    grid.innerHTML = '<div class="hint" style="margin-bottom:10px;">Não deu para reconectar sua agenda automaticamente (o navegador bloqueia esse tipo de reconexão em segundo plano). Clique abaixo para reconectar — deve ser rápido, sem pedir autorização de novo.</div>' +
+      '<button class="btn-primary cal-connect-btn" onclick="reconnectRemembered()">Reconectar</button>';
+    return;
+  }
   if(calView === 'month') renderMonthGrid(grid);
   else if(calView === 'week') renderWeekList(grid);
   else renderDayList(grid);
