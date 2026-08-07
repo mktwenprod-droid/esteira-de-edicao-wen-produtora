@@ -237,6 +237,8 @@
   .field input[type=text]:focus,.field input[type=date]:focus,.field input[type=password]:focus,.field select:focus{outline:none;border-color:var(--primary);}
   .podcast-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;color:var(--text);}
   .podcast-row:last-child{border-bottom:none;}
+  .podcast-row span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .podcast-row-actions{display:flex;gap:10px;align-items:center;flex:none;}
   .auth-controls-inner{display:flex;align-items:center;gap:8px;}
   .editor-badge{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-muted);max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   @media(max-width:620px){.editor-badge{display:none;}}
@@ -661,8 +663,14 @@ function renderPodcastsPanel(){
       const row = document.createElement('div');
       row.className = 'podcast-row';
       row.innerHTML = '<span>' + escapeHtml(p.nome) + '</span>' +
-        (editable ? '<button class="iconbtn delbtn" data-remove-pod title="Remover">✕</button>' : '');
-      if(editable) row.querySelector('[data-remove-pod]').addEventListener('click', () => removePodcast(p.id));
+        '<div class="podcast-row-actions">' +
+        (editable ? '<button class="iconbtn" data-quick-add title="Adicionar à esteira"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg></button>' : '') +
+        (editable ? '<button class="iconbtn delbtn" data-remove-pod title="Remover">✕</button>' : '') +
+        '</div>';
+      if(editable){
+        row.querySelector('[data-quick-add]').addEventListener('click', () => openModalForPodcast(p.id));
+        row.querySelector('[data-remove-pod]').addEventListener('click', () => removePodcast(p.id));
+      }
       list.appendChild(row);
     });
   }
@@ -736,6 +744,14 @@ function openModal(){
 }
 function closeModal(){
   document.getElementById('modal-bg').classList.remove('open');
+}
+
+function openModalForPodcast(podcastId){
+  openModal();
+  document.querySelector('input[name="job-tipo"][value="recorrente"]').checked = true;
+  updateJobTipoFields();
+  document.getElementById('f-podcast-select').value = podcastId;
+  document.getElementById('f-episodio').focus();
 }
 
 function saveNewJob(){
