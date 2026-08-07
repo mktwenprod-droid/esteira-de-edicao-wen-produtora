@@ -31,6 +31,10 @@ service cloud.firestore {
 
 > A `apiKey` do Firebase para apps Web não é um segredo (ela só identifica o projeto); quem protege os dados de verdade são as regras do Firestore acima, por isso é normal ela ficar visível no código publicado.
 
+## Podcasts recorrentes
+
+O painel "Podcasts" (abaixo da Agenda) guarda a lista de podcasts que você edita regularmente. Ao criar um novo job, escolha **Podcast recorrente** para selecionar um da lista (em vez de digitar o nome toda vez) e opcionalmente completar com o número do episódio — ou **Esporádica** para um job avulso, como antes. Cadastrar/remover podcasts também é uma ação de editor.
+
 ## Editores x visualizadores (clientes)
 
 Qualquer pessoa que abrir o link consegue **ver** o quadro (inclusive clientes, sem precisar de conta ou senha) — mas só consegue **editar** quem tiver feito login como editor. Os botões de criar, mover, editar e excluir job ficam escondidos pra quem não é editor, e mesmo que alguém tente forçar pelo console do navegador, as regras do Firestore acima bloqueiam a escrita de verdade.

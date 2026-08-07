@@ -77,15 +77,16 @@
     padding-left:max(0px, env(safe-area-inset-left));padding-right:max(0px, env(safe-area-inset-right));
   }
   .wrap{flex:1 1 auto;min-width:0;width:100%;padding:28px 28px 44px;}
-  .side-panel{flex:0 0 440px;padding:28px;position:sticky;top:40px;max-height:calc(100vh - 80px);overflow-y:auto;}
+  .side-col{flex:0 0 440px;display:flex;flex-direction:column;gap:20px;position:sticky;top:40px;max-height:calc(100vh - 80px);overflow-y:auto;}
+  .side-panel{padding:28px;flex:none;}
   .topbar{
     display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
     padding-bottom:18px;margin-bottom:22px;border-bottom:1px solid var(--border);
   }
-  @media(max-width:1300px){ .side-panel{flex-basis:380px;} }
+  @media(max-width:1300px){ .side-col{flex-basis:380px;} }
   @media(max-width:1050px){
     .shell-row{flex-direction:column;margin:20px auto;gap:16px;}
-    .side-panel{position:static;max-height:none;width:100%;flex-basis:auto;max-width:520px;}
+    .side-col{position:static;max-height:none;width:100%;flex-basis:auto;max-width:520px;}
   }
   @media(max-width:700px){
     .shell-row{margin:14px;}
@@ -232,8 +233,10 @@
   .field{margin-bottom:14px;}
   .field label{display:block;font-size:12px;color:var(--text-muted);margin-bottom:6px;}
   .field .hint{font-size:11px;color:var(--text-muted);margin-top:5px;}
-  .field input[type=text],.field input[type=date],.field input[type=password]{width:100%;background:var(--panel-2);border:1px solid var(--border);color:var(--text);border-radius:7px;padding:9px 10px;font-family:'Inter',sans-serif;font-size:13px;}
-  .field input[type=text]:focus,.field input[type=date]:focus,.field input[type=password]:focus{outline:none;border-color:var(--primary);}
+  .field input[type=text],.field input[type=date],.field input[type=password],.field select{width:100%;background:var(--panel-2);border:1px solid var(--border);color:var(--text);border-radius:7px;padding:9px 10px;font-family:'Inter',sans-serif;font-size:13px;}
+  .field input[type=text]:focus,.field input[type=date]:focus,.field input[type=password]:focus,.field select:focus{outline:none;border-color:var(--primary);}
+  .podcast-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;color:var(--text);}
+  .podcast-row:last-child{border-bottom:none;}
   .auth-controls-inner{display:flex;align-items:center;gap:8px;}
   .editor-badge{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-muted);max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   @media(max-width:620px){.editor-badge{display:none;}}
@@ -291,17 +294,29 @@
   <div class="month-tabs" id="month-tabs"></div>
   <div id="board-area"><div class="loading">Carregando jobs…</div></div>
 </div>
-<div class="side-panel shell" id="calendar-panel">
-  <div class="cal-head">
-    <div class="cal-title">Agenda</div>
-    <div class="cal-menu-wrap">
-      <button class="theme-toggle" id="cal-menu-btn" onclick="toggleCalMenu()" title="Contas conectadas" aria-label="Contas conectadas">
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><circle cx="12" cy="5" r="1.8"></circle><circle cx="12" cy="12" r="1.8"></circle><circle cx="12" cy="19" r="1.8"></circle></svg>
-      </button>
-      <div class="cal-menu" id="cal-menu"></div>
+<div class="side-col">
+  <div class="side-panel shell" id="calendar-panel">
+    <div class="cal-head">
+      <div class="cal-title">Agenda</div>
+      <div class="cal-menu-wrap">
+        <button class="theme-toggle" id="cal-menu-btn" onclick="toggleCalMenu()" title="Contas conectadas" aria-label="Contas conectadas">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><circle cx="12" cy="5" r="1.8"></circle><circle cx="12" cy="12" r="1.8"></circle><circle cx="12" cy="19" r="1.8"></circle></svg>
+        </button>
+        <div class="cal-menu" id="cal-menu"></div>
+      </div>
+    </div>
+    <div id="cal-body"><div class="loading">Carregando agenda…</div></div>
+  </div>
+  <div class="side-panel shell" id="podcasts-panel">
+    <div class="cal-head">
+      <div class="cal-title">Podcasts</div>
+    </div>
+    <div id="podcasts-list"><div class="loading">Carregando…</div></div>
+    <div class="attach-link-row" id="podcast-add-row" style="margin-top:10px;">
+      <input type="text" id="f-podcast-nome" placeholder="Nome do podcast">
+      <button class="btn-ghost" onclick="addPodcast()">Adicionar</button>
     </div>
   </div>
-  <div id="cal-body"><div class="loading">Carregando agenda…</div></div>
 </div>
 </div>
 
@@ -309,8 +324,24 @@
   <div class="modal">
     <h2>Novo job de edição</h2>
     <div class="field">
+      <label>Tipo</label>
+      <div class="checks">
+        <label class="check"><input type="radio" name="job-tipo" value="esporadica" checked onchange="updateJobTipoFields()"> Esporádica</label>
+        <label class="check"><input type="radio" name="job-tipo" value="recorrente" onchange="updateJobTipoFields()"> Podcast recorrente</label>
+      </div>
+    </div>
+    <div class="field" id="campo-nome-esporadica">
       <label>Nome do episódio / job</label>
       <input type="text" id="f-nome" placeholder="Ex: EP34 — Convidado X">
+    </div>
+    <div class="field" id="campo-podcast-recorrente" style="display:none;">
+      <label>Podcast</label>
+      <select id="f-podcast-select"></select>
+      <div class="hint">Nenhum podcast cadastrado ainda? Cadastre um no painel "Podcasts", na coluna da direita.</div>
+    </div>
+    <div class="field" id="campo-episodio-recorrente" style="display:none;">
+      <label>Episódio / detalhe (opcional)</label>
+      <input type="text" id="f-episodio" placeholder="Ex: EP34 — Convidado X">
     </div>
     <div class="field">
       <label>Data de recebimento da decupagem</label>
@@ -390,6 +421,7 @@ const firebaseConfig = {
 /* ========================================================= */
 
 const DOC_PATH = { collection: 'esteira-edicao', doc: 'jobs' };
+const PODCASTS_DOC_PATH = { collection: 'esteira-edicao', doc: 'podcasts' };
 
 const COLUMNS = [
   {id:'decupagem', label:'Em decupagem'},
@@ -404,10 +436,13 @@ const ATT_ICONS = {
   link: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>'
 };
 let jobs = [];
+let podcasts = [];
 let db = null;
 let docRef = null;
+let podcastsDocRef = null;
 let suppressNextWrite = false;
 let jobsListenerAttached = false;
+let podcastsListenerAttached = false;
 let selectedMonth = 'all';
 let detailJobId = null;
 let gcalAccounts = [];
@@ -475,6 +510,7 @@ function initFirebase(){
     firebase.initializeApp(firebaseConfig);
     db = firebase.firestore();
     docRef = db.collection(DOC_PATH.collection).doc(DOC_PATH.doc);
+    podcastsDocRef = db.collection(PODCASTS_DOC_PATH.collection).doc(PODCASTS_DOC_PATH.doc);
     let initialAuthChecked = false;
     firebase.auth().onAuthStateChanged(user => {
       if(!initialAuthChecked){
@@ -492,7 +528,12 @@ function initFirebase(){
           jobsListenerAttached = true;
           listenJobs();
         }
+        if(!podcastsListenerAttached){
+          podcastsListenerAttached = true;
+          listenPodcasts();
+        }
         renderAuthControls();
+        renderPodcastsPanel();
         render();
       }
     });
@@ -569,6 +610,79 @@ function persist(){
     });
 }
 
+function listenPodcasts(){
+  podcastsDocRef.onSnapshot(snap => {
+    const data = snap.data();
+    podcasts = (data && data.list) ? data.list : [];
+    renderPodcastsPanel();
+    populatePodcastSelect();
+  }, err => {
+    console.error(err);
+  });
+}
+
+function persistPodcasts(){
+  if(!podcastsDocRef) return;
+  podcastsDocRef.set({ list: podcasts, updatedAt: firebase.firestore.FieldValue.serverTimestamp() })
+    .catch(err => {
+      setStatus('error', 'Erro ao salvar: ' + err.message);
+      console.error(err);
+    });
+}
+
+function addPodcast(){
+  const input = document.getElementById('f-podcast-nome');
+  const nome = input.value.trim();
+  if(!nome) return;
+  podcasts.push({ id: 'pod-' + Date.now() + '-' + Math.random().toString(36).slice(2,6), nome });
+  persistPodcasts();
+  input.value = '';
+  renderPodcastsPanel();
+  populatePodcastSelect();
+}
+
+function removePodcast(id){
+  podcasts = podcasts.filter(p => p.id !== id);
+  persistPodcasts();
+  renderPodcastsPanel();
+  populatePodcastSelect();
+}
+
+function renderPodcastsPanel(){
+  const list = document.getElementById('podcasts-list');
+  const addRow = document.getElementById('podcast-add-row');
+  if(!list) return;
+  const editable = isEditor();
+  if(podcasts.length === 0){
+    list.innerHTML = '<div class="empty" style="padding:6px 0;">Nenhum podcast cadastrado</div>';
+  } else {
+    list.innerHTML = '';
+    podcasts.forEach(p => {
+      const row = document.createElement('div');
+      row.className = 'podcast-row';
+      row.innerHTML = '<span>' + escapeHtml(p.nome) + '</span>' +
+        (editable ? '<button class="iconbtn delbtn" data-remove-pod title="Remover">✕</button>' : '');
+      if(editable) row.querySelector('[data-remove-pod]').addEventListener('click', () => removePodcast(p.id));
+      list.appendChild(row);
+    });
+  }
+  if(addRow) addRow.style.display = editable ? '' : 'none';
+}
+
+function populatePodcastSelect(){
+  const sel = document.getElementById('f-podcast-select');
+  if(!sel) return;
+  sel.innerHTML = podcasts.map(p => '<option value="' + escapeHtml(p.id) + '">' + escapeHtml(p.nome) + '</option>').join('');
+}
+
+function updateJobTipoFields(){
+  const tipoInput = document.querySelector('input[name="job-tipo"]:checked');
+  const tipo = tipoInput ? tipoInput.value : 'esporadica';
+  document.getElementById('campo-nome-esporadica').style.display = tipo === 'esporadica' ? '' : 'none';
+  document.getElementById('campo-podcast-recorrente').style.display = tipo === 'recorrente' ? '' : 'none';
+  document.getElementById('campo-episodio-recorrente').style.display = tipo === 'recorrente' ? '' : 'none';
+}
+
 function todayISO(){
   const d = new Date();
   return new Date(d.getFullYear(),d.getMonth(),d.getDate()).toISOString().slice(0,10);
@@ -609,10 +723,14 @@ function urgencyColor(daysLeft){
 
 function openModal(){
   document.getElementById('f-nome').value = '';
+  document.getElementById('f-episodio').value = '';
   document.getElementById('f-data').value = '';
   document.getElementById('f-integra').checked = true;
   document.getElementById('f-horizontal').checked = false;
   document.getElementById('f-vertical').checked = false;
+  document.querySelector('input[name="job-tipo"][value="esporadica"]').checked = true;
+  populatePodcastSelect();
+  updateJobTipoFields();
   document.getElementById('modal-bg').classList.add('open');
   document.getElementById('f-nome').focus();
 }
@@ -621,9 +739,20 @@ function closeModal(){
 }
 
 function saveNewJob(){
-  const nome = document.getElementById('f-nome').value.trim();
+  const tipoInput = document.querySelector('input[name="job-tipo"]:checked');
+  const tipo = tipoInput ? tipoInput.value : 'esporadica';
+  let nome;
+  if(tipo === 'recorrente'){
+    const sel = document.getElementById('f-podcast-select');
+    const selected = podcasts.find(p => p.id === sel.value);
+    if(!selected){ sel.focus(); return; }
+    const episodio = document.getElementById('f-episodio').value.trim();
+    nome = selected.nome + (episodio ? ' - ' + episodio : '');
+  } else {
+    nome = document.getElementById('f-nome').value.trim();
+    if(!nome){ document.getElementById('f-nome').focus(); return; }
+  }
   const data = document.getElementById('f-data').value || null;
-  if(!nome){ document.getElementById('f-nome').focus(); return; }
   const formatos = [];
   if(document.getElementById('f-integra').checked) formatos.push('integra');
   if(document.getElementById('f-horizontal').checked) formatos.push('horizontal');
