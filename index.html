@@ -223,22 +223,22 @@
   .cal-event-date{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--track);margin-bottom:3px;}
   .cal-event-title{font-size:13px;color:var(--text);line-height:1.3;}
   .cal-nav{display:flex;align-items:center;gap:10px;margin-bottom:16px;}
-  .cal-nav-btn{background:transparent;border:1px solid var(--border);color:var(--text-muted);border-radius:8px;width:32px;height:32px;flex:none;cursor:pointer;font-size:16px;line-height:1;}
-  .cal-nav-btn:hover{border-color:var(--border-strong);color:var(--text);}
-  .cal-period-label{flex:1;text-align:center;font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:15px;color:var(--text);text-transform:capitalize;}
+  .cal-nav-btn{background:transparent;border:none;color:var(--text-muted);border-radius:50%;width:32px;height:32px;flex:none;cursor:pointer;font-size:16px;line-height:1;}
+  .cal-nav-btn:hover{background:var(--panel-3);color:var(--text);}
+  .cal-period-label{flex:1;text-align:left;font-family:'Inter',sans-serif;font-weight:600;font-size:15px;color:var(--text);text-transform:capitalize;}
   .cal-view-toggle{display:flex;gap:8px;margin-bottom:18px;}
   .cal-view-btn{flex:1;font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:13px;padding:9px 6px;border-radius:9px;border:1px solid var(--border);background:var(--panel);color:var(--text-muted);cursor:pointer;}
   .cal-view-btn:hover{color:var(--text);}
   .cal-view-btn.active{background:var(--primary);border-color:var(--primary);color:#fff;}
-  .cal-month-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;}
-  .cal-weekday{font-family:'IBM Plex Mono',monospace;font-size:12px;text-align:center;color:var(--text-muted);padding-bottom:8px;}
-  .cal-day-cell{aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:10px;cursor:pointer;font-size:15px;color:var(--text);background:var(--panel-3);border:none;font-family:'Inter',sans-serif;}
-  .cal-day-cell:hover{background:var(--panel-2);}
-  .cal-day-cell.outside{color:var(--text-muted);opacity:0.4;}
-  .cal-day-cell.today{background:var(--primary);color:#fff;font-weight:700;}
-  .cal-day-dots{display:flex;gap:3px;margin-top:4px;height:5px;}
+  .cal-month-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;border:1px solid var(--border);border-radius:12px;overflow:hidden;background:var(--border);}
+  .cal-weekday{font-family:'Inter',sans-serif;font-weight:600;font-size:11px;text-align:center;color:var(--text-muted);padding:10px 0 8px;text-transform:uppercase;letter-spacing:0.03em;background:var(--panel-2);}
+  .cal-day-cell{aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;font-size:0;color:var(--text);background:var(--panel-2);border:none;font-family:'Inter',sans-serif;}
+  .cal-day-cell:hover{background:var(--panel-3);}
+  .cal-day-cell.outside{color:var(--text-muted);opacity:0.45;}
+  .cal-day-num{width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:50%;font-size:14px;}
+  .cal-day-cell.today .cal-day-num{background:var(--primary);color:#fff;font-weight:600;}
+  .cal-day-dots{display:flex;gap:3px;height:5px;}
   .cal-day-dot{width:5px;height:5px;border-radius:50%;background:var(--track);}
-  .cal-day-cell.today .cal-day-dot{background:#fff;}
   .cal-week-day{margin-bottom:14px;}
   .cal-week-day-head{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:12px;color:var(--text);margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid var(--border);text-transform:capitalize;}
   .cal-week-day-head.today{color:var(--primary);}
@@ -450,7 +450,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="https://accounts.google.com/gsi/client" async defer onload="onGoogleLibLoaded()"></script>
 <script>
 /* =========================================================
    CONFIGURAÇÃO DO GOOGLE CALENDAR — troque pelo Client ID do SEU projeto
@@ -503,6 +503,7 @@ let selectedMonth = 'all';
 let detailJobId = null;
 let gcalAccounts = [];
 let calMenuOpen = false;
+let googleLibLoaded = false;
 let calView = 'month';
 let calRefDate = new Date();
 let calEvents = [];
@@ -1286,7 +1287,15 @@ function initCalendarPanel(){
       '</ol></div>';
     return;
   }
-  tryAutoReconnect();
+  renderCalendarPanel();
+  if(googleLibLoaded){
+    tryAutoReconnect();
+  }
+}
+
+function onGoogleLibLoaded(){
+  googleLibLoaded = true;
+  if(isGoogleConfigured()) tryAutoReconnect();
 }
 
 function requestGoogleToken(opts){
@@ -1497,7 +1506,7 @@ function renderMonthGrid(container){
     const isToday = sameDay(d, today);
     const evs = eventsOnDay(d);
     html += '<button type="button" class="cal-day-cell' + (outside?' outside':'') + (isToday?' today':'') + '" data-date="' + d.toISOString() + '">' +
-      '<span>' + d.getDate() + '</span>' +
+      '<span class="cal-day-num">' + d.getDate() + '</span>' +
       '<div class="cal-day-dots">' + evs.slice(0,3).map(()=>'<span class="cal-day-dot"></span>').join('') + '</div>' +
       '</button>';
   }
