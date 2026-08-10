@@ -33,7 +33,7 @@ service cloud.firestore {
 
 ## Podcasts recorrentes
 
-O painel "Podcasts" (abaixo da Agenda) guarda a lista de podcasts que você edita regularmente. Ao criar um novo job, escolha **Podcast recorrente** para selecionar um da lista (em vez de digitar o nome toda vez) e opcionalmente completar com o número do episódio — ou **Esporádica** para um job avulso, como antes. Cadastrar/remover podcasts também é uma ação de editor.
+O painel "Podcasts" (na coluna lateral) guarda a lista de podcasts que você edita regularmente. Ao criar um novo job, escolha **Podcast recorrente** para selecionar um da lista (em vez de digitar o nome toda vez) e opcionalmente completar com o número do episódio — ou **Esporádica** para um job avulso, como antes. Cadastrar/remover podcasts também é uma ação de editor.
 
 ## Editores x visualizadores (clientes)
 
@@ -52,30 +52,18 @@ Não existe cadastro público — só quem você criar manualmente no Firebase c
 
 Clicando em qualquer card abre a visão detalhada, onde dá pra anexar links (Google Drive, WeTransfer, Frame.io etc.), editar o nome e marcar os formatos concluídos. Funciona sem nenhuma configuração extra no Firebase.
 
-## Configurar a agenda do Google Calendar (opcional)
+## Cortes de edição (com organização por IA)
 
-O painel lateral "Agenda" mostra os próximos eventos do Google Calendar de quem estiver logado. É gratuito — a API do Google Calendar não tem plano pago, só uma cota diária bem generosa, sem precisar de cartão de crédito.
+Dentro da visão detalhada de cada card tem uma seção "Cortes de edição": uma área pra colar texto bruto (transcrição, anotações, lista de trechos) e organizar automaticamente numa tabela — com colunas de início, fim, duração, orador, descrição/tópico e tag — e um checkbox por linha pra marcar o corte como concluído. Cada job tem sua própria tabela, salva no Firestore junto com o job. Dá pra editar qualquer célula na mão, adicionar linhas manualmente ou remover linhas — tudo isso é ação de editor (viewers só veem a tabela, sem os controles).
 
-1. Acesse [console.cloud.google.com](https://console.cloud.google.com) e crie um projeto novo (pode reaproveitar um existente).
-2. Vá em **APIs e serviços → Biblioteca**, procure **Google Calendar API** e clique em **Ativar**.
-3. Vá em **APIs e serviços → Tela de consentimento OAuth**. Escolha **Externo**, preencha o nome do app e seu e-mail, e deixe em modo **Teste** — nesse modo não precisa de verificação do Google, só funciona para os e-mails que você adicionar como **usuários de teste** (adicione o seu e o de quem mais for usar).
-4. Vá em **APIs e serviços → Credenciais → Criar credenciais → ID do cliente OAuth**. Tipo de aplicativo: **Aplicativo da Web**. Em **Origens JavaScript autorizadas**, adicione a URL do seu site publicado (ex: `https://seu-usuario.github.io`) — sem caminho no final.
-5. Copie o **Client ID** gerado (termina em `.apps.googleusercontent.com`).
-6. Abra o [index.html](index.html), procure o bloco `CONFIGURAÇÃO DO GOOGLE CALENDAR` (perto do fim do arquivo) e cole o Client ID no lugar de `GOOGLE_CLIENT_ID`.
-7. Faça commit e push. No painel lateral do site, clique no menu **⋮** (três pontinhos) → **Adicionar conta** e autorize o acesso (somente leitura) à sua agenda.
+A organização automática usa a **API do Google Gemini** (tem uso gratuito, sem cartão de crédito, com uma cota diária generosa):
 
-Pelo menu **⋮** também dá pra conectar mais de uma conta (os eventos de todas aparecem juntos) e remover uma conta já conectada. Depois de conectar uma vez, o site tenta reconectar sozinho a cada visita (sem precisar clicar de novo) contanto que você continue logado nessa conta Google no navegador; se não conseguir automaticamente, é só clicar em "Adicionar conta" de novo.
-
-### Os eventos não aparecem mesmo logado
-
-Por padrão o painel busca a agenda **pessoal** da conta conectada (a agenda "primary" dela). Se os compromissos que você quer acompanhar estão numa **agenda compartilhada** — por exemplo, você foi adicionado como convidado numa agenda de outra pessoa ou de uma organização, e por isso não consegue tornar essa agenda pública nem alterar o compartilhamento dela — o painel precisa saber o ID dessa agenda específica:
-
-1. No Google Calendar, passe o mouse na agenda desejada (na lista à esquerda) → clique nos três pontinhos → **Configurações e compartilhamento**.
-2. Role até **Integrar agenda** e copie o **ID da agenda** (algo como `abc123@group.calendar.google.com`, ou um e-mail comum se for a agenda pessoal de outra pessoa que compartilhou com você).
-3. Abra o [index.html](index.html), procure o bloco `CONFIGURAÇÃO DO GOOGLE CALENDAR` e troque o valor de `GOOGLE_CALENDAR_ID` (que vem como `"primary"`) por esse ID.
+1. Acesse [aistudio.google.com/apikey](https://aistudio.google.com/apikey) e gere uma chave de API (com sua conta Google normal — não precisa ser convidado/organização, é uma conta pessoal).
+2. **Importante — restrinja a chave antes de publicar**: como este site é público e o código fica visível no navegador de qualquer pessoa, uma chave sem restrição pode ser copiada e usada por qualquer um, gerando custo/consumo de cota pra você. No [console.cloud.google.com](https://console.cloud.google.com), vá em **APIs e serviços → Credenciais**, clique na chave que você gerou → em **Restrições de aplicativo**, escolha **Sites (referenciadores HTTP)** → adicione a URL do seu site publicado com um `*` no final (ex: `https://seu-usuario.github.io/*`). Assim a chave só funciona quando chamada a partir do seu site.
+3. Abra o [index.html](index.html), procure o bloco `CONFIGURAÇÃO DA IA` (perto do fim do arquivo) e cole a chave no lugar de `GEMINI_API_KEY`.
 4. Faça commit e push.
 
-Se depois disso o painel mostrar uma mensagem de erro (HTTP 404 ou 403) em vez dos eventos, é sinal de que o ID está errado ou a conta conectada não tem acesso de leitura a essa agenda — confirme que a agenda foi mesmo compartilhada com o e-mail que você usou para conectar.
+Depois disso, é só colar o texto na caixa e clicar em **Organizar com IA** — as linhas geradas são adicionadas à tabela do job (sem apagar linhas já existentes). Se a chave não estiver configurada, o botão mostra um aviso explicando o que falta.
 
 ## Publicar / acessar de qualquer lugar (GitHub Pages)
 

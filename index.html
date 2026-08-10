@@ -204,7 +204,7 @@
   @keyframes modalIn{from{opacity:0;transform:translateY(6px) scale(.98);}to{opacity:1;transform:none;}}
   .detail-modal{
     background:var(--glossy-bg);border:1px solid var(--glossy-border);border-radius:var(--radius);
-    padding:22px;width:100%;max-width:440px;max-height:85vh;overflow-y:auto;
+    padding:22px;width:100%;max-width:640px;max-height:85vh;overflow-y:auto;
     box-shadow:var(--shadow-lg);
     backdrop-filter:blur(24px) saturate(160%);-webkit-backdrop-filter:blur(24px) saturate(160%);
     animation:modalIn .18s ease;
@@ -216,44 +216,21 @@
   .detail-col-badge{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.03em;}
   .detail-section{margin-top:18px;}
   .detail-section-title{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:0.04em;color:var(--text-muted);margin-bottom:8px;}
-  .cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
-  .cal-title{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:17px;color:var(--text);}
-  .cal-event{padding:8px 0;border-bottom:1px solid var(--border);}
-  .cal-event:last-child{border-bottom:none;}
-  .cal-event-date{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--track);margin-bottom:3px;}
-  .cal-event-title{font-size:13px;color:var(--text);line-height:1.3;}
-  .cal-nav{display:flex;align-items:center;gap:10px;margin-bottom:16px;}
-  .cal-nav-btn{background:transparent;border:none;color:var(--text-muted);border-radius:50%;width:32px;height:32px;flex:none;cursor:pointer;font-size:16px;line-height:1;}
-  .cal-nav-btn:hover{background:var(--panel-3);color:var(--text);}
-  .cal-period-label{flex:1;text-align:left;font-family:'Inter',sans-serif;font-weight:600;font-size:15px;color:var(--text);text-transform:capitalize;}
-  .cal-view-toggle{display:flex;gap:8px;margin-bottom:18px;}
-  .cal-view-btn{flex:1;font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:13px;padding:9px 6px;border-radius:9px;border:1px solid var(--border);background:var(--panel);color:var(--text-muted);cursor:pointer;}
-  .cal-view-btn:hover{color:var(--text);}
-  .cal-view-btn.active{background:var(--primary);border-color:var(--primary);color:#fff;}
-  .cal-month-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;border:1px solid var(--border);border-radius:12px;overflow:hidden;background:var(--border);}
-  .cal-weekday{font-family:'Inter',sans-serif;font-weight:600;font-size:11px;text-align:center;color:var(--text-muted);padding:10px 0 8px;text-transform:uppercase;letter-spacing:0.03em;background:var(--panel-2);}
-  .cal-day-cell{aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;font-size:0;color:var(--text);background:var(--panel-2);border:none;font-family:'Inter',sans-serif;}
-  .cal-day-cell:hover{background:var(--panel-3);}
-  .cal-day-cell.outside{color:var(--text-muted);opacity:0.45;}
-  .cal-day-num{width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:50%;font-size:14px;}
-  .cal-day-cell.today .cal-day-num{background:var(--primary);color:#fff;font-weight:600;}
-  .cal-day-dots{display:flex;gap:3px;height:5px;}
-  .cal-day-dot{width:5px;height:5px;border-radius:50%;background:var(--track);}
-  .cal-week-day{margin-bottom:14px;}
-  .cal-week-day-head{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:12px;color:var(--text);margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid var(--border);text-transform:capitalize;}
-  .cal-week-day-head.today{color:var(--primary);}
-  .cal-empty-day{color:var(--text-muted);font-size:12px;padding:4px 0;}
-  .cal-connect-btn{width:100%;}
-  .cal-menu-wrap{position:relative;}
-  .cal-menu{position:absolute;top:calc(100% + 6px);right:0;min-width:230px;background:var(--panel-2);border:1px solid var(--border-strong);border-radius:12px;box-shadow:var(--shadow-lg);padding:8px;display:none;z-index:6;}
-  .cal-menu.open{display:block;}
-  .cal-menu-item{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;border-radius:8px;font-size:13px;color:var(--text);cursor:pointer;}
-  .cal-menu-item:hover{background:var(--panel-3);}
-  .cal-menu-email{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--text-muted);}
-  .cal-menu-divider{height:1px;background:var(--border);margin:6px 2px;}
-  .cal-menu-add{color:var(--primary);font-weight:600;}
-  .cal-menu-remove{color:var(--text-muted);background:transparent;border:none;cursor:pointer;font-size:13px;flex:none;padding:2px 4px;}
-  .cal-menu-remove:hover{color:var(--red);}
+  .panel-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+  .panel-title{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:17px;color:var(--text);}
+  .cuts-paste{width:100%;min-height:90px;resize:vertical;background:var(--panel-2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'Inter',sans-serif;font-size:13px;padding:10px;margin-bottom:8px;}
+  .cuts-paste:focus{outline:none;border-color:var(--primary);}
+  .cuts-actions{display:flex;justify-content:space-between;gap:8px;margin-bottom:6px;flex-wrap:wrap;}
+  .cuts-table-wrap{overflow-x:auto;margin-top:8px;}
+  .cuts-table{border-collapse:collapse;width:100%;font-size:12px;}
+  .cuts-table th{text-align:left;color:var(--text-muted);font-weight:600;font-size:10.5px;text-transform:uppercase;letter-spacing:0.03em;padding:6px 8px;border-bottom:1px solid var(--border-strong);white-space:nowrap;}
+  .cuts-table td{padding:4px 8px;border-bottom:1px solid var(--border);vertical-align:middle;}
+  .cuts-check-cell{text-align:center;}
+  .cuts-table tr.cut-done{opacity:0.55;}
+  .cuts-table tr.cut-done td{text-decoration:line-through;}
+  .cuts-cell-input{width:100%;min-width:70px;background:transparent;border:none;border-bottom:1px solid transparent;color:var(--text);font-family:'Inter',sans-serif;font-size:12px;padding:3px 2px;}
+  .cuts-cell-input.mono{font-family:'IBM Plex Mono',monospace;min-width:64px;}
+  .cuts-cell-input:focus{outline:none;border-bottom-color:var(--primary);}
   .modal h2{font-family:'Space Grotesk',sans-serif;font-size:16px;margin:0 0 16px;}
   .field{margin-bottom:14px;}
   .field label{display:block;font-size:12px;color:var(--text-muted);margin-bottom:6px;}
@@ -290,7 +267,6 @@
     .modal,.detail-modal{max-width:none;margin-top:auto;}
     .modal-bg{align-items:flex-end;padding:0;}
     .modal,.detail-modal{border-radius:20px 20px 0 0;width:100%;max-height:88vh;padding-bottom:max(22px, env(safe-area-inset-bottom));animation:modalInMobile .2s ease;}
-    .cal-menu{min-width:200px;}
   }
   @keyframes modalInMobile{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:none;}}
 </style>
@@ -337,21 +313,9 @@
   <div id="board-area"><div class="loading">Carregando jobs…</div></div>
 </div>
 <div class="side-col">
-  <div class="side-panel shell mobile-hidden" id="calendar-panel">
-    <div class="cal-head">
-      <div class="cal-title">Agenda</div>
-      <div class="cal-menu-wrap">
-        <button class="theme-toggle" id="cal-menu-btn" onclick="toggleCalMenu()" title="Contas conectadas" aria-label="Contas conectadas">
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><circle cx="12" cy="5" r="1.8"></circle><circle cx="12" cy="12" r="1.8"></circle><circle cx="12" cy="19" r="1.8"></circle></svg>
-        </button>
-        <div class="cal-menu" id="cal-menu"></div>
-      </div>
-    </div>
-    <div id="cal-body"><div class="loading">Carregando agenda…</div></div>
-  </div>
   <div class="side-panel shell mobile-hidden" id="podcasts-panel">
-    <div class="cal-head">
-      <div class="cal-title">Podcasts</div>
+    <div class="panel-head">
+      <div class="panel-title">Podcasts</div>
     </div>
     <div id="podcasts-list"><div class="loading">Carregando…</div></div>
     <div class="attach-link-row" id="podcast-add-row" style="margin-top:10px;">
@@ -366,10 +330,6 @@
   <button class="mobile-tab-btn active" data-section="board" onclick="setMobileSection('board')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="6" height="16" rx="1.5"></rect><rect x="9.5" y="4" width="6" height="10" rx="1.5"></rect><rect x="16" y="4" width="6" height="13" rx="1.5"></rect></svg>
     <span>Quadro</span>
-  </button>
-  <button class="mobile-tab-btn" data-section="agenda" onclick="setMobileSection('agenda')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"></rect><line x1="16" y1="3" x2="16" y2="7"></line><line x1="8" y1="3" x2="8" y2="7"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-    <span>Agenda</span>
   </button>
   <button class="mobile-tab-btn" data-section="podcasts" onclick="setMobileSection('podcasts')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"></rect><path d="M5 10a7 7 0 0 0 14 0"></path><line x1="12" y1="19" x2="12" y2="22"></line></svg>
@@ -451,22 +411,22 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-<script src="https://accounts.google.com/gsi/client" async defer onload="onGoogleLibLoaded()"></script>
 <script>
 /* =========================================================
-   CONFIGURAÇÃO DO GOOGLE CALENDAR — troque pelo Client ID do SEU projeto
-   (Google Cloud Console > APIs e serviços > Credenciais > ID do cliente OAuth)
-   Veja o passo a passo no README.md deste repositório.
+   CONFIGURAÇÃO DA IA (Google Gemini) — usada para organizar os cortes
+   colados no painel "Cortes de edição" de cada job.
+   1. Gere uma chave grátis em https://aistudio.google.com/apikey
+   2. IMPORTANTE: como este site é público (o código fica visível no
+      navegador de qualquer pessoa), restrinja a chave para só funcionar
+      a partir do seu domínio: no Google Cloud Console > APIs e serviços
+      > Credenciais > clique na chave > "Restrições de aplicativo" >
+      "Sites" (HTTP referrers) > adicione algo como
+      "https://seu-usuario.github.io/*". Assim, mesmo que alguém veja a
+      chave no código, ela não funciona fora do seu site.
+   Veja o passo a passo completo no README.md deste repositório.
    ========================================================= */
-const GOOGLE_CLIENT_ID = "877633908006-qpp85edo41h816gp7ml9vc5cd3alvhsu.apps.googleusercontent.com";
-
-/* Por padrão busca a agenda PESSOAL de quem conectar ("primary"). Se os
-   compromissos que você quer ver estão numa agenda COMPARTILHADA (comum
-   quando sua conta é "convidada" em outra agenda/organização), troque o
-   valor abaixo pelo ID dessa agenda: na agenda desejada, vá em
-   Configurações e compartilhamento > Integrar agenda > ID da agenda
-   (algo como "abc123@group.calendar.google.com"). Veja o README.md. */
-const GOOGLE_CALENDAR_ID = "primary";
+const GEMINI_API_KEY = "SUA_CHAVE_AQUI";
+const GEMINI_MODEL = "gemini-2.5-flash";
 /* ========================================================= */
 
 /* =========================================================
@@ -510,14 +470,6 @@ let jobsListenerAttached = false;
 let podcastsListenerAttached = false;
 let selectedMonth = 'all';
 let detailJobId = null;
-let gcalAccounts = [];
-let calMenuOpen = false;
-let googleLibLoaded = false;
-let reconnectNeeded = false;
-let calView = 'month';
-let calRefDate = new Date();
-let calEvents = [];
-let calFetchError = null;
 let collapsedCols = new Set();
 try{ collapsedCols = new Set(JSON.parse(localStorage.getItem('esteira-collapsed-cols') || '[]')); }catch(e){}
 
@@ -640,7 +592,6 @@ function renderAuthControls(){
 
 function setMobileSection(section){
   document.getElementById('section-board').classList.toggle('mobile-hidden', section !== 'board');
-  document.getElementById('calendar-panel').classList.toggle('mobile-hidden', section !== 'agenda');
   document.getElementById('podcasts-panel').classList.toggle('mobile-hidden', section !== 'podcasts');
   document.querySelectorAll('.mobile-tab-btn').forEach(btn => {
     btn.classList.toggle('active', btn.getAttribute('data-section') === section);
@@ -1027,6 +978,10 @@ function renderDetailModal(){
         '</div>' +
         '<div class="hint" id="detail-attach-status"></div>'
         : '') +
+    '</div>' +
+    '<div class="detail-section">' +
+      '<div class="detail-section-title">Cortes de edição</div>' +
+      '<div id="detail-cuts-body"></div>' +
     '</div>';
 
   const nameInput = document.getElementById('detail-name-input');
@@ -1047,6 +1002,7 @@ function renderDetailModal(){
   });
 
   renderDetailAttachList();
+  renderDetailCuts();
 }
 function renderDetailAttachList(){
   const job = jobs.find(j => j.id === detailJobId);
@@ -1230,368 +1186,174 @@ function render(){
   area.appendChild(board);
 }
 
-function isGoogleConfigured(){
-  return GOOGLE_CLIENT_ID && GOOGLE_CLIENT_ID.indexOf('SEU_') !== 0;
+function isGeminiConfigured(){
+  return typeof GEMINI_API_KEY === 'string' && GEMINI_API_KEY && GEMINI_API_KEY.indexOf('SUA_') !== 0;
 }
 
-function startOfWeek(d){ const r = new Date(d); r.setHours(0,0,0,0); r.setDate(r.getDate() - r.getDay()); return r; }
-function addDays(d, n){ const r = new Date(d); r.setDate(r.getDate()+n); return r; }
-function addMonths(d, n){ const r = new Date(d); r.setMonth(r.getMonth()+n); return r; }
-function startOfMonth(d){ return new Date(d.getFullYear(), d.getMonth(), 1); }
-function sameDay(a,b){ return a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate(); }
-
-function getCalRange(){
-  if(calView === 'day'){
-    const s = new Date(calRefDate); s.setHours(0,0,0,0);
-    return {start:s, end:addDays(s,1)};
+function renderDetailCuts(){
+  const job = jobs.find(j => j.id === detailJobId);
+  const wrap = document.getElementById('detail-cuts-body');
+  if(!wrap || !job) return;
+  const editable = isEditor();
+  if(!job.cuts) job.cuts = [];
+  let html = '';
+  if(editable){
+    html +=
+      '<textarea id="f-cuts-paste" class="cuts-paste" placeholder="Cole aqui a transcrição, anotações ou lista de cortes..."></textarea>' +
+      '<div class="cuts-actions">' +
+        '<button class="btn-ghost" onclick="addManualCutRow()">+ Linha manual</button>' +
+        '<button class="btn-primary" id="cuts-organize-btn" onclick="organizeCutsWithAI()">Organizar com IA</button>' +
+      '</div>' +
+      '<div class="hint" id="cuts-status"></div>';
   }
-  if(calView === 'week'){
-    const s = startOfWeek(calRefDate);
-    return {start:s, end:addDays(s,7)};
+  if(job.cuts.length === 0){
+    html += '<div class="empty" style="padding:10px 0;">Nenhum corte ainda</div>';
+  } else {
+    html +=
+      '<div class="cuts-table-wrap"><table class="cuts-table"><thead><tr>' +
+        '<th></th><th>Início</th><th>Fim</th><th>Duração</th><th>Orador</th><th>Descrição / Tópico</th><th>Tag</th>' +
+        (editable ? '<th></th>' : '') +
+      '</tr></thead><tbody>' +
+        job.cuts.map((c, i) => cutRowHtml(c, i, editable)).join('') +
+      '</tbody></table></div>';
   }
-  const gridStart = startOfWeek(startOfMonth(calRefDate));
-  return {start:gridStart, end:addDays(gridStart,42)};
-}
+  wrap.innerHTML = html;
 
-function calPeriodLabel(){
-  if(calView === 'day'){
-    return calRefDate.toLocaleDateString('pt-BR', {weekday:'short', day:'2-digit', month:'short'});
+  if(editable){
+    wrap.querySelectorAll('[data-cut-field]').forEach(input => {
+      input.addEventListener('change', () => {
+        const i = Number(input.getAttribute('data-cut-i'));
+        const field = input.getAttribute('data-cut-field');
+        job.cuts[i][field] = input.type === 'checkbox' ? input.checked : input.value;
+        persist();
+        if(field === 'done'){
+          input.closest('tr').classList.toggle('cut-done', input.checked);
+        }
+      });
+    });
+    wrap.querySelectorAll('[data-remove-cut]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        job.cuts.splice(Number(btn.getAttribute('data-remove-cut')), 1);
+        persist();
+        renderDetailCuts();
+      });
+    });
   }
-  if(calView === 'week'){
-    const s = startOfWeek(calRefDate), e = addDays(s,6);
-    const sameMonth = s.getMonth() === e.getMonth();
-    return s.getDate() + (sameMonth ? '' : ' ' + MONTH_NAMES[s.getMonth()]) + '–' + e.getDate() + ' ' + MONTH_NAMES[e.getMonth()];
+}
+
+function cutRowHtml(c, i, editable){
+  if(editable){
+    return '<tr class="' + (c.done?'cut-done':'') + '">' +
+      '<td class="cuts-check-cell"><input type="checkbox" data-cut-field="done" data-cut-i="' + i + '" ' + (c.done?'checked':'') + '></td>' +
+      '<td><input type="text" class="cuts-cell-input mono" data-cut-field="start" data-cut-i="' + i + '" value="' + escapeHtml(c.start||'') + '"></td>' +
+      '<td><input type="text" class="cuts-cell-input mono" data-cut-field="end" data-cut-i="' + i + '" value="' + escapeHtml(c.end||'') + '"></td>' +
+      '<td><input type="text" class="cuts-cell-input mono" data-cut-field="duration" data-cut-i="' + i + '" value="' + escapeHtml(c.duration||'') + '"></td>' +
+      '<td><input type="text" class="cuts-cell-input" data-cut-field="speaker" data-cut-i="' + i + '" value="' + escapeHtml(c.speaker||'') + '"></td>' +
+      '<td><input type="text" class="cuts-cell-input" data-cut-field="description" data-cut-i="' + i + '" value="' + escapeHtml(c.description||'') + '"></td>' +
+      '<td><input type="text" class="cuts-cell-input" data-cut-field="tag" data-cut-i="' + i + '" value="' + escapeHtml(c.tag||'') + '"></td>' +
+      '<td><button class="iconbtn delbtn" data-remove-cut="' + i + '" title="Remover">✕</button></td>' +
+    '</tr>';
   }
-  return MONTH_NAMES[calRefDate.getMonth()] + ' ' + calRefDate.getFullYear();
+  return '<tr class="' + (c.done?'cut-done':'') + '">' +
+    '<td class="cuts-check-cell">' + (c.done?'✓':'') + '</td>' +
+    '<td class="mono">' + escapeHtml(c.start||'') + '</td>' +
+    '<td class="mono">' + escapeHtml(c.end||'') + '</td>' +
+    '<td class="mono">' + escapeHtml(c.duration||'') + '</td>' +
+    '<td>' + escapeHtml(c.speaker||'') + '</td>' +
+    '<td>' + escapeHtml(c.description||'') + '</td>' +
+    '<td>' + escapeHtml(c.tag||'') + '</td>' +
+  '</tr>';
 }
 
-function eventsOnDay(date){
-  return calEvents.filter(ev => {
-    const raw = ev.start && (ev.start.dateTime || ev.start.date);
-    if(!raw) return false;
-    return sameDay(new Date(raw), date);
-  }).sort((a,b) => new Date(a.start.dateTime || a.start.date) - new Date(b.start.dateTime || b.start.date));
+function addManualCutRow(){
+  const job = jobs.find(j => j.id === detailJobId);
+  if(!job) return;
+  if(!job.cuts) job.cuts = [];
+  job.cuts.push({start:'', end:'', duration:'', speaker:'', description:'', tag:'', done:false});
+  persist();
+  renderDetailCuts();
 }
 
-function calEventRowHtml(ev){
-  const timeLabel = ev.start && ev.start.dateTime
-    ? new Date(ev.start.dateTime).toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'})
-    : 'Dia todo';
-  return '<div class="cal-event">' +
-    '<div class="cal-event-date">' + escapeHtml(timeLabel) + '</div>' +
-    '<div class="cal-event-title">' + escapeHtml(ev.summary || '(sem título)') + '</div>' +
-    '</div>';
-}
-
-function initCalendarPanel(){
-  if(!isGoogleConfigured()){
-    document.getElementById('cal-menu-btn').style.display = 'none';
-    document.getElementById('cal-body').innerHTML =
-      '<div class="setup-box"><h3>Agenda não configurada</h3>' +
-      'Para sincronizar com o Google Calendar:' +
+function organizeCutsWithAI(){
+  const job = jobs.find(j => j.id === detailJobId);
+  const statusEl = document.getElementById('cuts-status');
+  const btn = document.getElementById('cuts-organize-btn');
+  const textarea = document.getElementById('f-cuts-paste');
+  if(!job || !textarea || !statusEl) return;
+  const raw = textarea.value.trim();
+  if(!raw){ statusEl.textContent = 'Cole algum texto antes de organizar.'; return; }
+  if(!isGeminiConfigured()){
+    statusEl.innerHTML = '<div class="setup-box" style="margin-top:8px;"><h3>IA não configurada</h3>' +
+      'Para organizar cortes automaticamente com IA:' +
       '<ol>' +
-      '<li>Crie um projeto em <code>console.cloud.google.com</code></li>' +
-      '<li>Ative a <code>Google Calendar API</code></li>' +
-      '<li>Configure a tela de consentimento OAuth (modo Teste, adicione seu e-mail como testador)</li>' +
-      '<li>Crie uma credencial <code>ID do cliente OAuth</code>, tipo Aplicativo da Web, com a URL deste site em "Origens JavaScript autorizadas"</li>' +
-      '<li>Cole o Client ID no início do <code>&lt;script&gt;</code> deste arquivo (<code>index.html</code>), no lugar de <code>GOOGLE_CLIENT_ID</code>. Veja o passo a passo completo no README.md</li>' +
+      '<li>Gere uma chave grátis em <code>aistudio.google.com/apikey</code></li>' +
+      '<li>Restrinja a chave ao seu domínio (veja instruções no README.md)</li>' +
+      '<li>Cole a chave no início do <code>&lt;script&gt;</code> deste arquivo (<code>index.html</code>), no lugar de <code>GEMINI_API_KEY</code></li>' +
       '</ol></div>';
     return;
   }
-  renderCalendarPanel();
-  if(googleLibLoaded){
-    tryAutoReconnect();
-  }
-}
-
-function onGoogleLibLoaded(){
-  googleLibLoaded = true;
-  if(isGoogleConfigured()) tryAutoReconnect();
-}
-
-function requestGoogleToken(opts){
-  if(typeof google === 'undefined' || !google.accounts){
-    opts.onError && opts.onError('lib-not-loaded');
-    return;
-  }
-  const client = google.accounts.oauth2.initTokenClient({
-    client_id: GOOGLE_CLIENT_ID,
-    scope: 'https://www.googleapis.com/auth/calendar.readonly https://www.googleapis.com/auth/userinfo.email',
-    hint: opts.hint || undefined,
-    prompt: opts.prompt !== undefined ? opts.prompt : '',
-    callback: (resp) => {
-      if(resp.error){ opts.onError && opts.onError(resp.error); return; }
-      opts.onSuccess && opts.onSuccess(resp.access_token);
-    }
-  });
-  client.requestAccessToken();
-}
-
-function rememberedAccountEmails(){
-  try{ return JSON.parse(localStorage.getItem('esteira-gcal-accounts') || '[]'); }catch(e){ return []; }
-}
-function saveRememberedAccounts(){
-  try{ localStorage.setItem('esteira-gcal-accounts', JSON.stringify(gcalAccounts.map(a => a.email))); }catch(e){}
-}
-
-function tryAutoReconnect(){
-  const remembered = rememberedAccountEmails();
-  if(remembered.length === 0){ refreshCalendar(); return; }
-  let pending = remembered.length;
-  let anyFailed = false;
-  remembered.forEach(email => {
-    requestGoogleToken({
-      hint: email,
-      prompt: 'none',
-      onSuccess: (token) => {
-        gcalAccounts.push({email, accessToken: token});
-        pending--;
-        if(pending === 0){ refreshCalendar(); }
-      },
-      onError: () => {
-        anyFailed = true;
-        pending--;
-        if(pending === 0){
-          reconnectNeeded = anyFailed && gcalAccounts.length === 0;
-          refreshCalendar();
-        }
-      }
-    });
-  });
-}
-
-function reconnectRemembered(){
-  const remembered = rememberedAccountEmails();
-  if(remembered.length === 0) return;
-  const grid = document.getElementById('cal-grid');
-  if(grid) grid.innerHTML = '<div class="loading">Reconectando…</div>';
-  let pending = remembered.length;
-  remembered.forEach(email => {
-    requestGoogleToken({
-      hint: email,
-      prompt: '',
-      onSuccess: (token) => {
-        gcalAccounts.push({email, accessToken: token});
-        pending--;
-        if(pending === 0){ reconnectNeeded = false; refreshCalendar(); }
-      },
-      onError: () => {
-        pending--;
-        if(pending === 0){ refreshCalendar(); }
-      }
-    });
-  });
-}
-
-function connectGoogleCalendar(forceChooser){
-  requestGoogleToken({
-    prompt: forceChooser ? 'select_account consent' : '',
-    onSuccess: (token) => addOrUpdateAccountFromToken(token),
-    onError: (err) => {
-      document.getElementById('cal-grid').innerHTML = '<div class="hint">Erro ao conectar: ' + escapeHtml(err) + '</div>';
-    }
-  });
-}
-
-function addOrUpdateAccountFromToken(token){
-  fetch('https://www.googleapis.com/oauth2/v3/userinfo', { headers: { Authorization: 'Bearer ' + token } })
-    .then(r => r.json())
-    .then(info => {
-      const email = info.email || ('conta-' + (gcalAccounts.length + 1));
-      const existing = gcalAccounts.find(a => a.email === email);
-      if(existing){ existing.accessToken = token; }
-      else{ gcalAccounts.push({email, accessToken: token}); }
-      saveRememberedAccounts();
-      renderCalMenu();
-      refreshCalendar();
+  btn.disabled = true;
+  statusEl.textContent = 'Organizando com IA…';
+  fetchGeminiCuts(raw)
+    .then(rows => {
+      job.cuts = (job.cuts || []).concat(rows);
+      persist();
+      textarea.value = '';
+      statusEl.textContent = '';
+      renderDetailCuts();
     })
-    .catch(() => {
-      gcalAccounts.push({email: 'Conta ' + (gcalAccounts.length + 1), accessToken: token});
-      saveRememberedAccounts();
-      renderCalMenu();
-      refreshCalendar();
-    });
-}
-
-function removeGoogleAccount(email){
-  const acc = gcalAccounts.find(a => a.email === email);
-  if(acc && typeof google !== 'undefined' && google.accounts){
-    google.accounts.oauth2.revoke(acc.accessToken, () => {});
-  }
-  gcalAccounts = gcalAccounts.filter(a => a.email !== email);
-  saveRememberedAccounts();
-  renderCalMenu();
-  refreshCalendar();
-}
-
-function toggleCalMenu(){ calMenuOpen = !calMenuOpen; renderCalMenu(); }
-function closeCalMenu(){ if(calMenuOpen){ calMenuOpen = false; renderCalMenu(); } }
-document.addEventListener('click', (e) => {
-  if(calMenuOpen && !e.target.closest('.cal-menu-wrap')) closeCalMenu();
-});
-
-function renderCalMenu(){
-  const menu = document.getElementById('cal-menu');
-  if(!menu) return;
-  menu.className = 'cal-menu' + (calMenuOpen ? ' open' : '');
-  if(!calMenuOpen){ menu.innerHTML = ''; return; }
-  let html = '';
-  if(gcalAccounts.length === 0){
-    html += '<div class="cal-menu-item" style="color:var(--text-muted);cursor:default;">Nenhuma conta conectada</div><div class="cal-menu-divider"></div>';
-  } else {
-    gcalAccounts.forEach(acc => {
-      html += '<div class="cal-menu-item"><span class="cal-menu-email" title="' + escapeHtml(acc.email) + '">' + escapeHtml(acc.email) + '</span>' +
-        '<button class="cal-menu-remove" data-remove-acc="' + escapeHtml(acc.email) + '" title="Remover">✕</button></div>';
-    });
-    html += '<div class="cal-menu-divider"></div>';
-  }
-  html += '<div class="cal-menu-item cal-menu-add" data-add-acc>+ Adicionar conta</div>';
-  html += '<div class="cal-menu-item" data-refresh-acc>Atualizar agora</div>';
-  menu.innerHTML = html;
-  menu.querySelectorAll('[data-remove-acc]').forEach(btn => {
-    btn.addEventListener('click', e => { e.stopPropagation(); removeGoogleAccount(btn.getAttribute('data-remove-acc')); });
-  });
-  const addBtn = menu.querySelector('[data-add-acc]');
-  if(addBtn) addBtn.addEventListener('click', e => { e.stopPropagation(); closeCalMenu(); connectGoogleCalendar(true); });
-  const refreshBtn = menu.querySelector('[data-refresh-acc]');
-  if(refreshBtn) refreshBtn.addEventListener('click', e => { e.stopPropagation(); closeCalMenu(); loadCalEvents(); });
-}
-
-function setCalView(view){ calView = view; refreshCalendar(); }
-function navigateCal(dir){
-  if(calView === 'day') calRefDate = addDays(calRefDate, dir);
-  else if(calView === 'week') calRefDate = addDays(calRefDate, dir*7);
-  else calRefDate = addMonths(calRefDate, dir);
-  refreshCalendar();
-}
-function goToCalToday(){ calRefDate = new Date(); refreshCalendar(); }
-function goToCalDay(date){ calRefDate = date; calView = 'day'; refreshCalendar(); }
-
-function refreshCalendar(){
-  renderCalendarPanel();
-  loadCalEvents();
-}
-
-function renderCalendarPanel(){
-  const body = document.getElementById('cal-body');
-  body.innerHTML =
-    '<div class="cal-nav">' +
-      '<button class="cal-nav-btn" data-nav="-1">‹</button>' +
-      '<div class="cal-period-label">' + escapeHtml(calPeriodLabel()) + '</div>' +
-      '<button class="cal-nav-btn" data-nav="1">›</button>' +
-    '</div>' +
-    '<div class="cal-view-toggle">' +
-      ['day','week','month'].map(v =>
-        '<button class="cal-view-btn' + (calView===v?' active':'') + '" data-view="' + v + '">' + (v==='day'?'Dia':v==='week'?'Semana':'Mês') + '</button>'
-      ).join('') +
-    '</div>' +
-    '<div id="cal-grid"><div class="loading">Carregando…</div></div>' +
-    '<div style="text-align:center;margin-top:10px;"><button class="btn-ghost" data-today>Hoje</button></div>';
-
-  body.querySelectorAll('[data-nav]').forEach(btn => {
-    btn.addEventListener('click', () => navigateCal(parseInt(btn.getAttribute('data-nav'))));
-  });
-  body.querySelectorAll('[data-view]').forEach(btn => {
-    btn.addEventListener('click', () => setCalView(btn.getAttribute('data-view')));
-  });
-  body.querySelector('[data-today]').addEventListener('click', goToCalToday);
-  renderCalMenu();
-}
-
-function loadCalEvents(){
-  if(gcalAccounts.length === 0){
-    calEvents = [];
-    renderCalGrid();
-    return;
-  }
-  const range = getCalRange();
-  const params = new URLSearchParams({
-    timeMin: range.start.toISOString(),
-    timeMax: range.end.toISOString(),
-    maxResults: '250',
-    singleEvents: 'true',
-    orderBy: 'startTime'
-  });
-  const calendarUrl = 'https://www.googleapis.com/calendar/v3/calendars/' +
-    encodeURIComponent(GOOGLE_CALENDAR_ID) + '/events?' + params.toString();
-  Promise.all(gcalAccounts.map(acc =>
-    fetch(calendarUrl, {
-      headers: { Authorization: 'Bearer ' + acc.accessToken }
+    .catch(err => {
+      statusEl.textContent = 'Erro ao organizar: ' + err.message;
     })
-      .then(r => { if(!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
-      .then(data => ({ ok: true, items: data.items || [] }))
-      .catch(err => ({ ok: false, error: err.message }))
-  )).then(results => {
-    const ok = results.filter(r => r.ok);
-    calEvents = ok.flatMap(r => r.items);
-    calFetchError = (ok.length === 0 && results.length > 0) ? results[0].error : null;
-    renderCalGrid();
-  });
+    .finally(() => { btn.disabled = false; });
 }
 
-function renderCalGrid(){
-  const grid = document.getElementById('cal-grid');
-  if(!grid) return;
-  if(reconnectNeeded && gcalAccounts.length === 0){
-    grid.innerHTML = '<div class="hint" style="margin-bottom:10px;">Não deu para reconectar sua agenda automaticamente (o navegador bloqueia esse tipo de reconexão em segundo plano). Clique abaixo para reconectar — deve ser rápido, sem pedir autorização de novo.</div>' +
-      '<button class="btn-primary cal-connect-btn" onclick="reconnectRemembered()">Reconectar</button>';
-    return;
-  }
-  if(calFetchError && gcalAccounts.length > 0){
-    grid.innerHTML = '<div class="hint" style="margin-bottom:10px;">Não deu para buscar os eventos (' + calFetchError + '). Se o erro for HTTP 404, a agenda configurada (GOOGLE_CALENDAR_ID) não existe ou você não tem acesso a ela. Se for HTTP 403, essa conta não tem permissão de leitura nessa agenda — confira o ID no bloco CONFIGURAÇÃO DO GOOGLE CALENDAR do index.html (veja o README).</div>';
-    return;
-  }
-  if(calView === 'month') renderMonthGrid(grid);
-  else if(calView === 'week') renderWeekList(grid);
-  else renderDayList(grid);
-}
+function fetchGeminiCuts(rawText){
+  const schema = {
+    type: 'ARRAY',
+    items: {
+      type: 'OBJECT',
+      properties: {
+        start: {type:'STRING'}, end: {type:'STRING'}, duration: {type:'STRING'},
+        speaker: {type:'STRING'}, description: {type:'STRING'}, tag: {type:'STRING'}
+      },
+      required: ['description']
+    }
+  };
+  const prompt = 'Você organiza anotações de edição de vídeo/podcast em uma tabela de cortes. ' +
+    'Receba o texto bruto abaixo (pode ser uma transcrição com timestamps, uma lista de trechos marcados, ou anotações soltas) e devolva uma lista de cortes. ' +
+    'Para cada corte, extraia: start (horário de início no formato HH:MM:SS se houver no texto, senão vazio), ' +
+    'end (horário de fim, se houver), duration (duração no formato HH:MM:SS, calculada a partir de start/end quando os dois existirem, senão vazio), ' +
+    'speaker (quem fala nesse trecho, se identificável), description (um resumo curto do tópico/conteúdo do corte), ' +
+    'tag (uma palavra ou frase curta classificando o corte, ex: "engraçado", "polêmico", "dado importante", "call to action", inferida pelo conteúdo). ' +
+    'Se o texto já vier em formato de tabela/lista com colunas parecidas, apenas reorganize fielmente sem inventar dados. Não invente horários que não estejam no texto original.\n\n' +
+    'TEXTO:\n' + rawText;
 
-function renderMonthGrid(container){
-  const gridStart = startOfWeek(startOfMonth(calRefDate));
-  const today = new Date();
-  const weekdays = ['D','S','T','Q','Q','S','S'];
-  let html = '<div class="cal-month-grid">';
-  weekdays.forEach(w => html += '<div class="cal-weekday">' + w + '</div>');
-  for(let i=0;i<42;i++){
-    const d = addDays(gridStart, i);
-    const outside = d.getMonth() !== calRefDate.getMonth();
-    const isToday = sameDay(d, today);
-    const evs = eventsOnDay(d);
-    html += '<button type="button" class="cal-day-cell' + (outside?' outside':'') + (isToday?' today':'') + '" data-date="' + d.toISOString() + '">' +
-      '<span class="cal-day-num">' + d.getDate() + '</span>' +
-      '<div class="cal-day-dots">' + evs.slice(0,3).map(()=>'<span class="cal-day-dot"></span>').join('') + '</div>' +
-      '</button>';
-  }
-  html += '</div>';
-  container.innerHTML = html;
-  container.querySelectorAll('[data-date]').forEach(cell => {
-    cell.addEventListener('click', () => goToCalDay(new Date(cell.getAttribute('data-date'))));
-  });
-}
-
-function renderWeekList(container){
-  const start = startOfWeek(calRefDate);
-  const today = new Date();
-  let html = '';
-  for(let i=0;i<7;i++){
-    const d = addDays(start, i);
-    const isToday = sameDay(d, today);
-    const evs = eventsOnDay(d);
-    html += '<div class="cal-week-day">' +
-      '<div class="cal-week-day-head' + (isToday?' today':'') + '">' + escapeHtml(d.toLocaleDateString('pt-BR',{weekday:'long', day:'2-digit'})) + '</div>' +
-      (evs.length ? evs.map(calEventRowHtml).join('') : '<div class="cal-empty-day">Sem eventos</div>') +
-      '</div>';
-  }
-  container.innerHTML = html;
-}
-
-function renderDayList(container){
-  const evs = eventsOnDay(calRefDate);
-  container.innerHTML = evs.length ? evs.map(calEventRowHtml).join('') : '<div class="empty">Nenhum evento</div>';
+  return fetch('https://generativelanguage.googleapis.com/v1beta/models/' + GEMINI_MODEL + ':generateContent?key=' + encodeURIComponent(GEMINI_API_KEY), {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      contents: [{ parts: [{ text: prompt }] }],
+      generationConfig: { responseMimeType: 'application/json', responseSchema: schema }
+    })
+  })
+    .then(r => { if(!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+    .then(data => {
+      const text = data.candidates && data.candidates[0] && data.candidates[0].content &&
+        data.candidates[0].content.parts && data.candidates[0].content.parts[0] &&
+        data.candidates[0].content.parts[0].text;
+      if(!text) throw new Error('resposta vazia da IA');
+      const parsed = JSON.parse(text);
+      if(!Array.isArray(parsed)) throw new Error('formato inesperado');
+      return parsed.map(row => ({
+        start: row.start || '', end: row.end || '', duration: row.duration || '',
+        speaker: row.speaker || '', description: row.description || '', tag: row.tag || '',
+        done: false
+      }));
+    });
 }
 
 initFirebase();
-initCalendarPanel();
 </script>
 </body>
 </html>
