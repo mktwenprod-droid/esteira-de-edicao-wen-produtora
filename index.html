@@ -415,17 +415,20 @@
 /* =========================================================
    CONFIGURAÇÃO DA IA (Google Gemini) — usada para organizar os cortes
    colados no painel "Cortes de edição" de cada job.
-   1. Gere uma chave grátis em https://aistudio.google.com/apikey
+   1. Crie uma chave em Google Cloud Console > APIs e serviços >
+      Credenciais > Criar credenciais > Chave de API, restrita à
+      "Generative Language API" (isso exige vincular a uma conta de
+      serviço — o próprio console guia por esse fluxo).
    2. IMPORTANTE: como este site é público (o código fica visível no
-      navegador de qualquer pessoa), restrinja a chave para só funcionar
-      a partir do seu domínio: no Google Cloud Console > APIs e serviços
-      > Credenciais > clique na chave > "Restrições de aplicativo" >
-      "Sites" (HTTP referrers) > adicione algo como
-      "https://seu-usuario.github.io/*". Assim, mesmo que alguém veja a
-      chave no código, ela não funciona fora do seu site.
+      navegador de qualquer pessoa), e chaves vinculadas a conta de
+      serviço NÃO suportam restrição por site (HTTP referrer), a única
+      defesa real contra abuso é limitar o estrago possível: em
+      Generative Language API > "Cotas e limites do sistema", defina um
+      limite diário baixo de requisições, e configure um alerta de
+      orçamento em Faturamento > Orçamentos e alertas.
    Veja o passo a passo completo no README.md deste repositório.
    ========================================================= */
-const GEMINI_API_KEY = "SUA_CHAVE_AQUI";
+const GEMINI_API_KEY = "AQ.Ab8RN6KIG37APJiQxvKvLbuCcaSU7no3cxtwZ6lB6mXKbvHW3Q";
 const GEMINI_MODEL = "gemini-flash-latest";
 /* ========================================================= */
 
