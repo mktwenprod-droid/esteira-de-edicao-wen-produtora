@@ -413,26 +413,6 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script>
 /* =========================================================
-   CONFIGURAÇÃO DA IA (Google Gemini) — usada para organizar os cortes
-   colados no painel "Cortes de edição" de cada job.
-   1. Crie uma chave em Google Cloud Console > APIs e serviços >
-      Credenciais > Criar credenciais > Chave de API, restrita à
-      "Generative Language API" (isso exige vincular a uma conta de
-      serviço — o próprio console guia por esse fluxo).
-   2. IMPORTANTE: como este site é público (o código fica visível no
-      navegador de qualquer pessoa), e chaves vinculadas a conta de
-      serviço NÃO suportam restrição por site (HTTP referrer), a única
-      defesa real contra abuso é limitar o estrago possível: em
-      Generative Language API > "Cotas e limites do sistema", defina um
-      limite diário baixo de requisições, e configure um alerta de
-      orçamento em Faturamento > Orçamentos e alertas.
-   Veja o passo a passo completo no README.md deste repositório.
-   ========================================================= */
-const GEMINI_API_KEY = "AQ.Ab8RN6KIG37APJiQxvKvLbuCcaSU7no3cxtwZ6lB6mXKbvHW3Q";
-const GEMINI_MODEL = "gemini-flash-latest";
-/* ========================================================= */
-
-/* =========================================================
    CONFIGURAÇÃO DO FIREBASE — troque pelos valores do SEU projeto
    (Console do Firebase > Configurações do projeto > Seus apps > Config)
    Veja o passo a passo no README.md deste repositório.
@@ -1189,10 +1169,6 @@ function render(){
   area.appendChild(board);
 }
 
-function isGeminiConfigured(){
-  return typeof GEMINI_API_KEY === 'string' && GEMINI_API_KEY && GEMINI_API_KEY.indexOf('SUA_') !== 0;
-}
-
 function renderDetailCuts(){
   const job = jobs.find(j => j.id === detailJobId);
   const wrap = document.getElementById('detail-cuts-body');
@@ -1202,10 +1178,11 @@ function renderDetailCuts(){
   let html = '';
   if(editable){
     html +=
-      '<textarea id="f-cuts-paste" class="cuts-paste" placeholder="Cole aqui a transcrição, anotações ou lista de cortes..."></textarea>' +
+      '<div class="hint" style="margin-bottom:6px;">Peça pro Claude (no chat) organizar seu texto no formato: <code>início | fim | duração | orador | descrição | tag</code>, uma linha por corte, e cole o resultado abaixo.</div>' +
+      '<textarea id="f-cuts-paste" class="cuts-paste" placeholder="início | fim | duração | orador | descrição | tag"></textarea>' +
       '<div class="cuts-actions">' +
         '<button class="btn-ghost" onclick="addManualCutRow()">+ Linha manual</button>' +
-        '<button class="btn-primary" id="cuts-organize-btn" onclick="organizeCutsWithAI()">Organizar com IA</button>' +
+        '<button class="btn-primary" id="cuts-import-btn" onclick="importPastedCuts()">Importar linhas coladas</button>' +
       '</div>' +
       '<div class="hint" id="cuts-status"></div>';
   }
@@ -1277,83 +1254,31 @@ function addManualCutRow(){
   renderDetailCuts();
 }
 
-function organizeCutsWithAI(){
+function importPastedCuts(){
   const job = jobs.find(j => j.id === detailJobId);
   const statusEl = document.getElementById('cuts-status');
-  const btn = document.getElementById('cuts-organize-btn');
   const textarea = document.getElementById('f-cuts-paste');
   if(!job || !textarea || !statusEl) return;
-  const raw = textarea.value.trim();
-  if(!raw){ statusEl.textContent = 'Cole algum texto antes de organizar.'; return; }
-  if(!isGeminiConfigured()){
-    statusEl.innerHTML = '<div class="setup-box" style="margin-top:8px;"><h3>IA não configurada</h3>' +
-      'Para organizar cortes automaticamente com IA:' +
-      '<ol>' +
-      '<li>Gere uma chave grátis em <code>aistudio.google.com/apikey</code></li>' +
-      '<li>Restrinja a chave ao seu domínio (veja instruções no README.md)</li>' +
-      '<li>Cole a chave no início do <code>&lt;script&gt;</code> deste arquivo (<code>index.html</code>), no lugar de <code>GEMINI_API_KEY</code></li>' +
-      '</ol></div>';
+  const lines = textarea.value.split('\n').map(l => l.trim()).filter(Boolean);
+  const rows = lines
+    .filter(l => l.includes('|'))
+    .map(l => {
+      const parts = l.split('|').map(p => p.trim());
+      return {
+        start: parts[0] || '', end: parts[1] || '', duration: parts[2] || '',
+        speaker: parts[3] || '', description: parts[4] || '', tag: parts[5] || '',
+        done: false
+      };
+    });
+  if(rows.length === 0){
+    statusEl.textContent = 'Nenhuma linha no formato "início | fim | duração | orador | descrição | tag" encontrada.';
     return;
   }
-  btn.disabled = true;
-  statusEl.textContent = 'Organizando com IA…';
-  fetchGeminiCuts(raw)
-    .then(rows => {
-      job.cuts = (job.cuts || []).concat(rows);
-      persist();
-      textarea.value = '';
-      statusEl.textContent = '';
-      renderDetailCuts();
-    })
-    .catch(err => {
-      statusEl.textContent = 'Erro ao organizar: ' + err.message;
-    })
-    .finally(() => { btn.disabled = false; });
-}
-
-function fetchGeminiCuts(rawText){
-  const schema = {
-    type: 'ARRAY',
-    items: {
-      type: 'OBJECT',
-      properties: {
-        start: {type:'STRING'}, end: {type:'STRING'}, duration: {type:'STRING'},
-        speaker: {type:'STRING'}, description: {type:'STRING'}, tag: {type:'STRING'}
-      },
-      required: ['description']
-    }
-  };
-  const prompt = 'Você organiza anotações de edição de vídeo/podcast em uma tabela de cortes. ' +
-    'Receba o texto bruto abaixo (pode ser uma transcrição com timestamps, uma lista de trechos marcados, ou anotações soltas) e devolva uma lista de cortes. ' +
-    'Para cada corte, extraia: start (horário de início no formato HH:MM:SS se houver no texto, senão vazio), ' +
-    'end (horário de fim, se houver), duration (duração no formato HH:MM:SS, calculada a partir de start/end quando os dois existirem, senão vazio), ' +
-    'speaker (quem fala nesse trecho, se identificável), description (um resumo curto do tópico/conteúdo do corte), ' +
-    'tag (uma palavra ou frase curta classificando o corte, ex: "engraçado", "polêmico", "dado importante", "call to action", inferida pelo conteúdo). ' +
-    'Se o texto já vier em formato de tabela/lista com colunas parecidas, apenas reorganize fielmente sem inventar dados. Não invente horários que não estejam no texto original.\n\n' +
-    'TEXTO:\n' + rawText;
-
-  return fetch('https://generativelanguage.googleapis.com/v1beta/models/' + GEMINI_MODEL + ':generateContent?key=' + encodeURIComponent(GEMINI_API_KEY), {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({
-      contents: [{ parts: [{ text: prompt }] }],
-      generationConfig: { responseMimeType: 'application/json', responseSchema: schema }
-    })
-  })
-    .then(r => { if(!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
-    .then(data => {
-      const text = data.candidates && data.candidates[0] && data.candidates[0].content &&
-        data.candidates[0].content.parts && data.candidates[0].content.parts[0] &&
-        data.candidates[0].content.parts[0].text;
-      if(!text) throw new Error('resposta vazia da IA');
-      const parsed = JSON.parse(text);
-      if(!Array.isArray(parsed)) throw new Error('formato inesperado');
-      return parsed.map(row => ({
-        start: row.start || '', end: row.end || '', duration: row.duration || '',
-        speaker: row.speaker || '', description: row.description || '', tag: row.tag || '',
-        done: false
-      }));
-    });
+  job.cuts = (job.cuts || []).concat(rows);
+  persist();
+  textarea.value = '';
+  statusEl.textContent = '';
+  renderDetailCuts();
 }
 
 initFirebase();
