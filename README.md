@@ -54,14 +54,28 @@ Clicando em qualquer card abre a visão detalhada, onde dá pra anexar links (Go
 
 ## Configurar a agenda do Google Calendar (opcional)
 
-O painel "Agenda" mostra a tela de verdade do Google Agenda, incorporada dentro do site (via `iframe`). É gratuito e simples — mas exige tornar a agenda **pública na internet** (qualquer pessoa com o link do site enxerga título e horário dos seus compromissos, sem precisar de login). Se isso for um problema, é melhor não configurar essa parte ou usar uma agenda separada só para os compromissos que podem ficar visíveis.
+O painel lateral "Agenda" mostra os próximos eventos do Google Calendar de quem estiver logado. É gratuito — a API do Google Calendar não tem plano pago, só uma cota diária bem generosa, sem precisar de cartão de crédito.
 
-1. Abra [calendar.google.com](https://calendar.google.com), no computador.
-2. No menu à esquerda, passe o mouse sobre a agenda que quer mostrar → **⋮** → **Configurações e compartilhamento**.
-3. Em **Acesso**, marque **Disponibilizar publicamente** (escolha se quer mostrar todos os detalhes dos eventos ou só os horários ocupados/livres).
-4. Role até **Integrar agenda** e copie o **ID da agenda** (normalmente é o seu próprio e-mail do Gmail).
-5. Abra o [index.html](index.html), procure o bloco `CONFIGURAÇÃO DA AGENDA` (perto do fim do arquivo) e cole esse ID no lugar de `GOOGLE_CALENDAR_ID`.
-6. Faça commit e push. O painel "Agenda" do site já deve mostrar a agenda automaticamente, sem precisar de login nenhum.
+1. Acesse [console.cloud.google.com](https://console.cloud.google.com) e crie um projeto novo (pode reaproveitar um existente).
+2. Vá em **APIs e serviços → Biblioteca**, procure **Google Calendar API** e clique em **Ativar**.
+3. Vá em **APIs e serviços → Tela de consentimento OAuth**. Escolha **Externo**, preencha o nome do app e seu e-mail, e deixe em modo **Teste** — nesse modo não precisa de verificação do Google, só funciona para os e-mails que você adicionar como **usuários de teste** (adicione o seu e o de quem mais for usar).
+4. Vá em **APIs e serviços → Credenciais → Criar credenciais → ID do cliente OAuth**. Tipo de aplicativo: **Aplicativo da Web**. Em **Origens JavaScript autorizadas**, adicione a URL do seu site publicado (ex: `https://seu-usuario.github.io`) — sem caminho no final.
+5. Copie o **Client ID** gerado (termina em `.apps.googleusercontent.com`).
+6. Abra o [index.html](index.html), procure o bloco `CONFIGURAÇÃO DO GOOGLE CALENDAR` (perto do fim do arquivo) e cole o Client ID no lugar de `GOOGLE_CLIENT_ID`.
+7. Faça commit e push. No painel lateral do site, clique no menu **⋮** (três pontinhos) → **Adicionar conta** e autorize o acesso (somente leitura) à sua agenda.
+
+Pelo menu **⋮** também dá pra conectar mais de uma conta (os eventos de todas aparecem juntos) e remover uma conta já conectada. Depois de conectar uma vez, o site tenta reconectar sozinho a cada visita (sem precisar clicar de novo) contanto que você continue logado nessa conta Google no navegador; se não conseguir automaticamente, é só clicar em "Adicionar conta" de novo.
+
+### Os eventos não aparecem mesmo logado
+
+Por padrão o painel busca a agenda **pessoal** da conta conectada (a agenda "primary" dela). Se os compromissos que você quer acompanhar estão numa **agenda compartilhada** — por exemplo, você foi adicionado como convidado numa agenda de outra pessoa ou de uma organização, e por isso não consegue tornar essa agenda pública nem alterar o compartilhamento dela — o painel precisa saber o ID dessa agenda específica:
+
+1. No Google Calendar, passe o mouse na agenda desejada (na lista à esquerda) → clique nos três pontinhos → **Configurações e compartilhamento**.
+2. Role até **Integrar agenda** e copie o **ID da agenda** (algo como `abc123@group.calendar.google.com`, ou um e-mail comum se for a agenda pessoal de outra pessoa que compartilhou com você).
+3. Abra o [index.html](index.html), procure o bloco `CONFIGURAÇÃO DO GOOGLE CALENDAR` e troque o valor de `GOOGLE_CALENDAR_ID` (que vem como `"primary"`) por esse ID.
+4. Faça commit e push.
+
+Se depois disso o painel mostrar uma mensagem de erro (HTTP 404 ou 403) em vez dos eventos, é sinal de que o ID está errado ou a conta conectada não tem acesso de leitura a essa agenda — confirme que a agenda foi mesmo compartilhada com o e-mail que você usou para conectar.
 
 ## Publicar / acessar de qualquer lugar (GitHub Pages)
 
