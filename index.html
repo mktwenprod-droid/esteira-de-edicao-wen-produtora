@@ -170,6 +170,7 @@
   .card-name{font-size:14px;font-weight:500;line-height:1.3;cursor:text;border-bottom:1px dashed transparent;}
   .card-name:hover{border-bottom-color:var(--border-strong);}
   .card-name-input{font-size:14px;font-weight:500;line-height:1.3;background:var(--panel-3);border:1px solid var(--primary);color:var(--text);border-radius:5px;padding:2px 5px;width:100%;font-family:'Inter',sans-serif;}
+  .rework-mark{color:var(--red);font-weight:700;cursor:help;}
   .ring{position:relative;width:34px;height:34px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;}
   .ring-label{font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:500;background:var(--panel);border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;}
   .meta{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-muted);margin-bottom:10px;}
@@ -814,6 +815,7 @@ function duplicateJob(id){
   const clone = JSON.parse(JSON.stringify(job));
   clone.id = 'job-' + Date.now() + '-' + Math.random().toString(36).slice(2,6);
   clone.nome = job.nome + ' (cópia)';
+  clone.refacao = false;
   Object.keys(clone.done).forEach(k => clone.done[k] = false);
   jobs.push(clone);
   persist();
@@ -950,7 +952,7 @@ function renderDetailModal(){
       vis.ringHtml +
       '<div class="detail-top-info">' +
         '<input class="detail-name-input" id="detail-name-input" type="text" value="' + escapeHtml(job.nome) + '"' + (editable?'':' readonly') + '>' +
-        '<div class="detail-col-badge">' + escapeHtml(col ? col.label : '') + '</div>' +
+        '<div class="detail-col-badge">' + escapeHtml(col ? col.label : '') + (job.refacao ? ' <span class="rework-mark" title="Em refação">*</span>' : '') + '</div>' +
       '</div>' +
     '</div>' +
     '<div class="meta" style="margin:14px 0 0;">' + vis.metaText + '</div>' +
@@ -1094,7 +1096,7 @@ function render(){
       card.addEventListener('click', () => openDetailModal(job.id));
       card.innerHTML =
         '<div class="card-top">' +
-          '<div class="card-name" data-name>' + escapeHtml(job.nome) + '</div>' +
+          '<div class="card-name" data-name>' + escapeHtml(job.nome) + (job.refacao ? ' <span class="rework-mark" title="Em refação">*</span>' : '') + '</div>' +
           vis.ringHtml +
         '</div>' +
         '<div class="meta">' + vis.metaText + '</div>' +
@@ -1103,7 +1105,7 @@ function render(){
         (editable ?
           '<div class="card-actions">' +
             '<div class="movebtns">' +
-              '<button ' + (idx===0?'disabled style="opacity:0.3"':'') + ' data-move="-1">‹</button>' +
+              '<button ' + (idx===0?'disabled style="opacity:0.3"':'') + ' data-move="-1" title="' + (col.id==='revisao'?'Mandar para refação':'Mover para trás') + '">‹</button>' +
               '<button ' + (idx===COLUMNS.length-1?'disabled style="opacity:0.3"':'') + ' data-move="1">›</button>' +
             '</div>' +
             '<div class="iconbtns">' +
@@ -1156,7 +1158,12 @@ function render(){
 
       if(editable){
         card.querySelectorAll('[data-move]').forEach(btn => {
-          btn.addEventListener('click', (e) => { e.stopPropagation(); moveJob(job.id, parseInt(btn.getAttribute('data-move'))); });
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const dir = parseInt(btn.getAttribute('data-move'));
+            if(dir === -1 && job.status === 'revisao') job.refacao = true;
+            moveJob(job.id, dir);
+          });
         });
         card.querySelector('[data-dup]').addEventListener('click', (e) => { e.stopPropagation(); duplicateJob(job.id); });
         card.querySelector('[data-del]').addEventListener('click', (e) => {
