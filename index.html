@@ -171,6 +171,8 @@
   .card-name:hover{border-bottom-color:var(--border-strong);}
   .card-name-input{font-size:14px;font-weight:500;line-height:1.3;background:var(--panel-3);border:1px solid var(--primary);color:var(--text);border-radius:5px;padding:2px 5px;width:100%;font-family:'Inter',sans-serif;}
   .rework-mark{color:var(--red);font-weight:700;cursor:help;}
+  .rework-btn{width:100%;margin-top:8px;color:var(--red);border-color:var(--red-dim);}
+  .rework-btn:hover{border-color:var(--red);}
   .ring{position:relative;width:34px;height:34px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;}
   .ring-label{font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:500;background:var(--panel);border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;}
   .meta{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-muted);margin-bottom:10px;}
@@ -816,6 +818,7 @@ function duplicateJob(id){
   clone.id = 'job-' + Date.now() + '-' + Math.random().toString(36).slice(2,6);
   clone.nome = job.nome + ' (cópia)';
   clone.refacao = false;
+  delete clone.refacaoDesde;
   Object.keys(clone.done).forEach(k => clone.done[k] = false);
   jobs.push(clone);
   persist();
@@ -841,6 +844,16 @@ function moveJob(id, dir){
     job.recebido = todayISO();
   }
   job.status = newCol;
+  persist();
+  render();
+}
+
+function sendToRework(id){
+  const job = jobs.find(j => j.id === id);
+  if(!job || job.status !== 'revisao') return;
+  job.status = 'edicao';
+  job.refacao = true;
+  job.refacaoDesde = todayISO();
   persist();
   render();
 }
@@ -898,6 +911,8 @@ function renderMonthTabs(){
 
 function getJobVisual(job){
   let ringHtml, stateColor, stateDim;
+  const emRefacao = job.refacao && job.refacaoDesde && job.status === 'edicao';
+  const deadlineBase = emRefacao ? job.refacaoDesde : job.recebido;
   if(job.status === 'entregue'){
     stateColor = 'var(--track)'; stateDim = 'var(--track-dim)';
     ringHtml = '<div class="ring" style="background:var(--track);">' +
@@ -910,8 +925,8 @@ function getJobVisual(job){
       '<div class="ring-label" style="background:transparent;">' +
       '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><polyline points="12 7 12 12 15 14"></polyline></svg>' +
       '</div></div>';
-  } else if(job.recebido){
-    const deadline = addBusinessDays(job.recebido, 4);
+  } else if(deadlineBase){
+    const deadline = addBusinessDays(deadlineBase, 4);
     const daysLeft = businessDaysLeft(deadline);
     const uc = urgencyColor(daysLeft);
     stateColor = uc.ring; stateDim = uc.dim;
@@ -924,9 +939,14 @@ function getJobVisual(job){
     ringHtml = '<div class="ring" style="background:var(--gray-dim);border:1px dashed var(--border-strong);">' +
       '<div class="ring-label" style="color:var(--text-muted);font-size:9px;background:transparent;">—</div></div>';
   }
-  const metaText = job.recebido
-    ? ('Decupagem ' + formatDatePt(new Date(job.recebido+'T00:00:00')) + ' → prazo ' + formatDatePt(addBusinessDays(job.recebido,4)))
-    : 'Aguardando decupagem';
+  let metaText;
+  if(emRefacao){
+    metaText = 'Refação desde ' + formatDatePt(new Date(job.refacaoDesde+'T00:00:00')) + ' → prazo ' + formatDatePt(addBusinessDays(job.refacaoDesde,4));
+  } else if(job.recebido){
+    metaText = 'Decupagem ' + formatDatePt(new Date(job.recebido+'T00:00:00')) + ' → prazo ' + formatDatePt(addBusinessDays(job.recebido,4));
+  } else {
+    metaText = 'Aguardando decupagem';
+  }
   return {ringHtml, stateColor, stateDim, metaText};
 }
 
@@ -1105,14 +1125,17 @@ function render(){
         (editable ?
           '<div class="card-actions">' +
             '<div class="movebtns">' +
-              '<button ' + (idx===0?'disabled style="opacity:0.3"':'') + ' data-move="-1" title="' + (col.id==='revisao'?'Mandar para refação':'Mover para trás') + '">‹</button>' +
+              '<button ' + (idx===0?'disabled style="opacity:0.3"':'') + ' data-move="-1">‹</button>' +
               '<button ' + (idx===COLUMNS.length-1?'disabled style="opacity:0.3"':'') + ' data-move="1">›</button>' +
             '</div>' +
             '<div class="iconbtns">' +
               '<button class="iconbtn" data-dup title="Duplicar">⧉</button>' +
               '<button class="iconbtn delbtn" data-del title="Remover">✕</button>' +
             '</div>' +
-          '</div>'
+          '</div>' +
+          (col.id === 'revisao' ?
+            '<button class="btn-ghost rework-btn" data-rework title="Volta para Em edição e reinicia o prazo em 4 dias úteis">↺ Mandar para refação</button>'
+            : '')
           : '');
 
       const nameEl = card.querySelector('[data-name]');
@@ -1158,13 +1181,10 @@ function render(){
 
       if(editable){
         card.querySelectorAll('[data-move]').forEach(btn => {
-          btn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const dir = parseInt(btn.getAttribute('data-move'));
-            if(dir === -1 && job.status === 'revisao') job.refacao = true;
-            moveJob(job.id, dir);
-          });
+          btn.addEventListener('click', (e) => { e.stopPropagation(); moveJob(job.id, parseInt(btn.getAttribute('data-move'))); });
         });
+        const reworkBtn = card.querySelector('[data-rework]');
+        if(reworkBtn) reworkBtn.addEventListener('click', (e) => { e.stopPropagation(); sendToRework(job.id); });
         card.querySelector('[data-dup]').addEventListener('click', (e) => { e.stopPropagation(); duplicateJob(job.id); });
         card.querySelector('[data-del]').addEventListener('click', (e) => {
           e.stopPropagation();
