@@ -1,0 +1,25 @@
+{
+  "name": "Esteira de Edição — WEN",
+  "short_name": "Esteira WEN",
+  "description": "Quadro de acompanhamento de jobs de edição de vídeo e podcast da WEN Produtora.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0B1220",
+  "theme_color": "#0B1220",
+  "icons": [
+    {
+      "src": "assets/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

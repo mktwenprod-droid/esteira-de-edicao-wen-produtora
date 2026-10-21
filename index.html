@@ -7,6 +7,12 @@
 <script>(function(){try{var t=localStorage.getItem('esteira-theme')||'dark';document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
 <title>Esteira de Edição — WEN</title>
 <link rel="icon" type="image/png" href="assets/logo-wen.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="assets/icon-180.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Esteira WEN">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -132,6 +138,7 @@
   .dot.online{background:var(--track);box-shadow:0 0 0 3px var(--track-dim);}
   .dot.error{background:var(--red);box-shadow:0 0 0 3px var(--red-dim);}
   .addbtn{background:var(--primary);color:#fff;border:none;font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:14px;padding:11px 18px;border-radius:999px;cursor:pointer;box-shadow:0 6px 20px rgba(104,18,214,0.35);transition:filter .15s ease,transform .15s ease;}
+  .install-btn{background:var(--track);box-shadow:0 6px 20px var(--track-dim);}
   .addbtn:hover{filter:brightness(1.12);transform:translateY(-1px);}
   .theme-toggle{width:38px;height:38px;border-radius:50%;border:1px solid var(--border);background:var(--panel-2);color:var(--text-muted);display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none;transition:border-color .15s ease,color .15s ease;}
   .theme-toggle:hover{border-color:var(--border-strong);color:var(--text);}
@@ -295,6 +302,7 @@
       <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
     </button>
     <button class="addbtn" id="addbtn-mobile" onclick="openModal()" style="display:none;">+ Novo</button>
+    <button class="addbtn install-btn" id="install-btn-mobile" onclick="installApp()" style="display:none;">📲 Instalar</button>
   </div>
 </div>
 <div class="shell-row">
@@ -1313,6 +1321,50 @@ function importPastedCuts(){
   textarea.value = '';
   statusEl.textContent = '';
   renderDetailCuts();
+}
+
+/* =========================================================
+   INSTALAÇÃO COMO APP (PWA)
+   ========================================================= */
+let deferredInstallPrompt = null;
+
+function isStandaloneApp(){
+  return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+}
+function isIosDevice(){
+  return /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
+}
+function updateInstallButton(){
+  const btn = document.getElementById('install-btn-mobile');
+  if(!btn) return;
+  if(isStandaloneApp()){ btn.style.display = 'none'; return; }
+  btn.style.display = (deferredInstallPrompt || isIosDevice()) ? '' : 'none';
+}
+function installApp(){
+  if(deferredInstallPrompt){
+    deferredInstallPrompt.prompt();
+    deferredInstallPrompt.userChoice.finally(() => { deferredInstallPrompt = null; updateInstallButton(); });
+    return;
+  }
+  if(isIosDevice()){
+    alert('Pra instalar: toque no ícone de Compartilhar (□↑) na barra do Safari e depois em "Adicionar à Tela de Início".');
+  }
+}
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  updateInstallButton();
+});
+window.addEventListener('appinstalled', () => {
+  deferredInstallPrompt = null;
+  updateInstallButton();
+});
+updateInstallButton();
+
+if('serviceWorker' in navigator){
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(err => console.error('Falha ao registrar service worker', err));
+  });
 }
 
 initFirebase();

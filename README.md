@@ -60,7 +60,14 @@ Pra organizar um texto bagunçado (transcrição, anotações) numa lista de cor
 
 > Por que não é automático dentro do site: chegamos a integrar a API do Google Gemini direto no navegador, mas chaves novas do Gemini exigem vínculo com uma conta de serviço, e esse tipo de chave não aceita restrição por domínio — então, assim que a chave aparece no código público do repositório, o Google a revoga automaticamente (proteção do próprio Google contra chaves vazadas). Não tem como contornar isso mantendo o site 100% estático; a alternativa seria um backend próprio (ex: Firebase Cloud Functions) guardando a chave em segredo, o que exigiria ativar o plano pago do Firebase e mais uma etapa de configuração.
 
-Depois disso, é só colar o texto na caixa e clicar em **Organizar com IA** — as linhas geradas são adicionadas à tabela do job (sem apagar linhas já existentes). Se a chave não estiver configurada, o botão mostra um aviso explicando o que falta.
+## Instalar como app no celular (PWA)
+
+O site é um PWA (Progressive Web App): dá pra instalar na tela de início do celular e abrir como um app normal, em tela cheia, sem a barra de endereço do navegador — resolve a navegação ruim de ficar usando pelo navegador comum.
+
+- **Android (Chrome)**: aparece um botão **"📲 Instalar"** no topo da versão mobile do site. Basta tocar nele e confirmar.
+- **iPhone/iPad (Safari)**: o iOS não permite instalar automaticamente — toque no ícone de **Compartilhar** (quadrado com seta pra cima) na barra do Safari e depois em **"Adicionar à Tela de Início"**. O botão "Instalar" no site mostra esse mesmo passo a passo quando tocado num iPhone.
+
+Depois de instalado, o ícone usa a logo da WEN e o app abre direto no quadro, sem precisar digitar a URL toda vez.
 
 ## Publicar / acessar de qualquer lugar (GitHub Pages)
 
