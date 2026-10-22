@@ -153,12 +153,8 @@
   .board{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;align-items:start;}
   @media(max-width:1100px){.board{grid-template-columns:repeat(2,1fr);}}
   @media(max-width:700px){
-    .board{
-      display:flex;grid-template-columns:none;overflow-x:auto;gap:12px;
-      scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;
-      margin:0 -14px;padding:2px 14px 14px;
-    }
-    .col{flex:0 0 86%;scroll-snap-align:start;max-width:380px;}
+    .board{display:flex;flex-direction:column;grid-template-columns:none;gap:14px;}
+    .col{width:100%;max-width:none;}
   }
   .col{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:12px;min-height:80px;transition:border-color .25s ease;}
   .col-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding:0 2px;}
@@ -171,8 +167,12 @@
   .col-title{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:0.04em;color:var(--text);}
   .col-count{font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:var(--track);background:var(--track-dim);padding:2px 8px;border-radius:20px;}
   .cards{display:flex;flex-direction:column;gap:10px;}
-  .card{background:var(--panel-2);border:1px solid var(--border);border-radius:12px;padding:12px 12px 10px;cursor:pointer;transition:transform .15s ease,box-shadow .15s ease,border-color .25s ease;}
+  .card{background:var(--panel-2);border:1px solid var(--border);border-radius:12px;padding:12px 12px 10px;cursor:pointer;transition:transform .15s ease,box-shadow .15s ease,border-color .25s ease;touch-action:pan-y;user-select:none;-webkit-user-select:none;}
   .card:hover{transform:translateY(-2px);box-shadow:0 10px 28px var(--card-glow, rgba(0,0,0,0.35));border-color:var(--border-strong);}
+  .card.pressing{transform:scale(0.96);box-shadow:0 2px 10px rgba(0,0,0,0.3);border-color:var(--primary);}
+  .column-picker-list{display:flex;flex-direction:column;gap:8px;max-height:60vh;overflow-y:auto;}
+  .column-picker-btn{width:100%;text-align:left;padding:12px 14px;}
+  .column-picker-btn.current{opacity:0.4;cursor:default;}
   .card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:8px;}
   .card-name{font-size:14px;font-weight:500;line-height:1.3;cursor:text;border-bottom:1px dashed transparent;}
   .card-name:hover{border-bottom-color:var(--border-strong);}
@@ -422,6 +422,16 @@
     <div class="modal-actions">
       <button class="btn-ghost" onclick="closeLoginModal()">Cancelar</button>
       <button class="btn-primary" onclick="submitLogin()">Entrar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="column-picker-modal-bg">
+  <div class="modal">
+    <h2>Mover "<span id="column-picker-name"></span>" para…</h2>
+    <div id="column-picker-list" class="column-picker-list"></div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeColumnPicker()">Cancelar</button>
     </div>
   </div>
 </div>
@@ -866,6 +876,44 @@ function sendToRework(id){
   render();
 }
 
+function moveJobToStatus(id, status){
+  const job = jobs.find(j => j.id === id);
+  if(!job || job.status === status) return;
+  if(status !== 'decupagem' && !job.recebido){
+    job.recebido = todayISO();
+  }
+  job.status = status;
+  persist();
+  render();
+}
+
+function openColumnPicker(jobId){
+  const job = jobs.find(j => j.id === jobId);
+  if(!job) return;
+  document.getElementById('column-picker-name').textContent = job.nome;
+  const list = document.getElementById('column-picker-list');
+  list.innerHTML = COLUMNS.map(c =>
+    '<button class="btn-ghost column-picker-btn' + (c.id===job.status?' current':'') + '" data-col="' + c.id + '" ' + (c.id===job.status?'disabled':'') + '>' +
+      escapeHtml(c.label) + (c.id===job.status?' (atual)':'') +
+    '</button>'
+  ).join('');
+  list.querySelectorAll('[data-col]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const targetStatus = btn.getAttribute('data-col');
+      closeColumnPicker();
+      if(job.status === 'revisao' && targetStatus === 'edicao'){
+        sendToRework(job.id);
+      } else {
+        moveJobToStatus(job.id, targetStatus);
+      }
+    });
+  });
+  document.getElementById('column-picker-modal-bg').classList.add('open');
+}
+function closeColumnPicker(){
+  document.getElementById('column-picker-modal-bg').classList.remove('open');
+}
+
 function renameJob(id, novoNome){
   const job = jobs.find(j => j.id === id);
   if(!job) return;
@@ -1077,6 +1125,7 @@ function addLinkAttachment(){
 }
 
 function render(){
+  const scrollY = window.scrollY;
   renderMonthTabs();
   const area = document.getElementById('board-area');
   const board = document.createElement('div');
@@ -1121,7 +1170,11 @@ function render(){
         card.style.borderColor = vis.stateDim;
         card.style.setProperty('--card-glow', vis.stateDim);
       }
-      card.addEventListener('click', () => openDetailModal(job.id));
+      let longPressFired = false;
+      card.addEventListener('click', () => {
+        if(longPressFired){ longPressFired = false; return; }
+        openDetailModal(job.id);
+      });
       card.innerHTML =
         '<div class="card-top">' +
           '<div class="card-name" data-name>' + escapeHtml(job.nome) + (job.refacao ? ' <span class="rework-mark" title="Em refação">*</span>' : '') + '</div>' +
@@ -1198,6 +1251,35 @@ function render(){
           e.stopPropagation();
           if(confirm('Remover "' + job.nome + '" da esteira?')) deleteJob(job.id);
         });
+
+        let pressTimer = null;
+        let startX = 0, startY = 0;
+        const LONG_PRESS_MS = 480;
+        const MOVE_TOLERANCE = 10;
+        const cancelPress = () => {
+          clearTimeout(pressTimer);
+          card.classList.remove('pressing');
+        };
+        card.addEventListener('pointerdown', (e) => {
+          if(e.pointerType === 'mouse' && e.button !== 0) return;
+          if(e.target.closest('button, a, input, label')) return;
+          startX = e.clientX; startY = e.clientY;
+          card.classList.add('pressing');
+          pressTimer = setTimeout(() => {
+            longPressFired = true;
+            cancelPress();
+            if(navigator.vibrate) navigator.vibrate(15);
+            openColumnPicker(job.id);
+          }, LONG_PRESS_MS);
+        });
+        card.addEventListener('pointermove', (e) => {
+          if(Math.abs(e.clientX - startX) > MOVE_TOLERANCE || Math.abs(e.clientY - startY) > MOVE_TOLERANCE){
+            cancelPress();
+          }
+        });
+        card.addEventListener('pointerup', cancelPress);
+        card.addEventListener('pointerleave', cancelPress);
+        card.addEventListener('pointercancel', cancelPress);
       }
 
       cardsWrap.appendChild(card);
@@ -1209,6 +1291,7 @@ function render(){
 
   area.innerHTML = '';
   area.appendChild(board);
+  window.scrollTo(0, scrollY);
 }
 
 function renderDetailCuts(){
