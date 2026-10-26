@@ -153,8 +153,18 @@
   .board{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;align-items:start;}
   @media(max-width:1100px){.board{grid-template-columns:repeat(2,1fr);}}
   @media(max-width:700px){
-    .board{display:flex;flex-direction:column;grid-template-columns:none;gap:14px;}
-    .col{width:100%;max-width:none;}
+    .board{display:flex;flex-direction:column;grid-template-columns:none;gap:22px;}
+    .col{width:100%;max-width:none;background:transparent;border:none;padding:0;min-height:0;}
+    .col-head{padding:0 2px 8px;margin-bottom:0;border-bottom:1px solid var(--border);}
+    .cards{gap:0;}
+    .card{background:transparent;border:none;border-bottom:1px solid var(--border);border-radius:0;padding:13px 2px;}
+    .card:hover{transform:none;box-shadow:none;}
+    .card.pressing{background:var(--panel-3);transform:none;box-shadow:none;border-color:transparent;}
+    .card .card-top{margin-bottom:3px;}
+    .card .ring{width:10px;height:10px;}
+    .card .ring-label{display:none;}
+    .card .meta{margin-bottom:0;}
+    .card .fmts,.card .attachments,.card .card-actions,.card .rework-btn{display:none;}
   }
   .col{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:12px;min-height:80px;transition:border-color .25s ease;}
   .col-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding:0 2px;}
@@ -225,6 +235,7 @@
   .detail-name-input:focus{outline:none;border-bottom-color:var(--primary);}
   .detail-col-badge{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.03em;}
   .detail-section{margin-top:18px;}
+  .detail-actions-row{display:flex;flex-wrap:wrap;gap:8px;}
   .detail-section-title{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:0.04em;color:var(--text-muted);margin-bottom:8px;}
   .panel-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
   .panel-title{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:17px;color:var(--text);}
@@ -273,6 +284,12 @@
   .setup-box h3{color:var(--text);font-family:'Space Grotesk',sans-serif;font-size:15px;margin:0 0 10px;}
   .setup-box code{background:var(--panel-2);padding:2px 6px;border-radius:4px;color:var(--primary);font-family:'IBM Plex Mono',monospace;font-size:12px;}
   .setup-box ol{padding-left:18px;margin:8px 0;}
+  .deadline-banner{background:var(--red-dim);border:1px solid var(--red);border-radius:12px;padding:12px 14px;margin-bottom:16px;}
+  .deadline-banner-title{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:12px;color:var(--red);text-transform:uppercase;letter-spacing:0.03em;margin-bottom:8px;}
+  .deadline-chip-row{display:flex;flex-wrap:wrap;gap:6px;}
+  .deadline-chip{font-family:'Inter',sans-serif;font-size:12px;padding:5px 10px;border-radius:999px;border:1px solid var(--border);cursor:pointer;background:var(--panel-2);color:var(--text);}
+  .deadline-chip.overdue{border-color:var(--red);color:var(--red);}
+  .deadline-chip.today{border-color:var(--yellow);color:var(--yellow);}
   @media(max-width:700px){
     .movebtns button{width:34px;height:34px;font-size:16px;}
     .iconbtn{padding:6px;font-size:16px;}
@@ -301,6 +318,7 @@
       <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path></svg>
       <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
     </button>
+    <button class="theme-toggle" id="notif-btn-mobile" onclick="requestNotificationPermission()" title="Ativar notificações de prazo" style="display:none;">🔔</button>
     <button class="addbtn" id="addbtn-mobile" onclick="openModal()" style="display:none;">+ Novo</button>
     <button class="addbtn install-btn" id="install-btn-mobile" onclick="installApp()" style="display:none;">📲 Instalar</button>
   </div>
@@ -324,9 +342,11 @@
         <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path></svg>
         <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
       </button>
+      <button class="theme-toggle" id="notif-btn" onclick="requestNotificationPermission()" title="Ativar notificações de prazo" style="display:none;">🔔</button>
       <button class="addbtn" id="addbtn" onclick="openModal()" style="display:none;">+ Novo job</button>
     </div>
   </div>
+  <div class="deadline-banner" id="deadline-banner" style="display:none;"></div>
   <div class="month-tabs" id="month-tabs"></div>
   <div id="board-area"><div class="loading">Carregando jobs…</div></div>
 </div>
@@ -599,6 +619,8 @@ function renderAuthControls(){
     const btn = document.getElementById(id);
     if(btn) btn.style.display = editable ? '' : 'none';
   });
+  updateNotifButton();
+  checkDeadlineAlerts();
 }
 
 function setMobileSection(section){
@@ -965,10 +987,20 @@ function renderMonthTabs(){
   });
 }
 
+function computeDeadlineInfo(job){
+  if(job.status === 'entregue' || job.status === 'revisao') return null;
+  const emRefacao = job.refacao && job.refacaoDesde && job.status === 'edicao';
+  const base = emRefacao ? job.refacaoDesde : job.recebido;
+  if(!base) return null;
+  const deadline = addBusinessDays(base, 4);
+  const daysLeft = businessDaysLeft(deadline);
+  return {base, deadline, daysLeft, emRefacao};
+}
+
 function getJobVisual(job){
   let ringHtml, stateColor, stateDim;
-  const emRefacao = job.refacao && job.refacaoDesde && job.status === 'edicao';
-  const deadlineBase = emRefacao ? job.refacaoDesde : job.recebido;
+  const info = computeDeadlineInfo(job);
+  const emRefacao = !!(info && info.emRefacao);
   if(job.status === 'entregue'){
     stateColor = 'var(--track)'; stateDim = 'var(--track-dim)';
     ringHtml = '<div class="ring" style="background:var(--track);">' +
@@ -981,9 +1013,8 @@ function getJobVisual(job){
       '<div class="ring-label" style="background:transparent;">' +
       '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><polyline points="12 7 12 12 15 14"></polyline></svg>' +
       '</div></div>';
-  } else if(deadlineBase){
-    const deadline = addBusinessDays(deadlineBase, 4);
-    const daysLeft = businessDaysLeft(deadline);
+  } else if(info){
+    const daysLeft = info.daysLeft;
     const uc = urgencyColor(daysLeft);
     stateColor = uc.ring; stateDim = uc.dim;
     let ringLabel = daysLeft < 0 ? 'ATR' : (daysLeft === 0 ? 'HOJE' : daysLeft + 'd');
@@ -1006,6 +1037,97 @@ function getJobVisual(job){
   return {ringHtml, stateColor, stateDim, metaText};
 }
 
+/* =========================================================
+   ALERTAS DE PRAZO
+   ========================================================= */
+function checkDeadlineAlerts(){
+  const bannerEl = document.getElementById('deadline-banner');
+  if(!bannerEl) return;
+  if(!isEditor()){
+    bannerEl.style.display = 'none';
+    bannerEl.innerHTML = '';
+    return;
+  }
+  const overdue = [], dueToday = [];
+  jobs.forEach(job => {
+    const info = computeDeadlineInfo(job);
+    if(!info) return;
+    if(info.daysLeft < 0) overdue.push(job);
+    else if(info.daysLeft === 0) dueToday.push(job);
+  });
+  renderDeadlineBanner(overdue, dueToday);
+  maybeFireDeadlineNotification(overdue, dueToday);
+}
+
+function renderDeadlineBanner(overdue, dueToday){
+  const bannerEl = document.getElementById('deadline-banner');
+  if(!bannerEl) return;
+  if(overdue.length === 0 && dueToday.length === 0){
+    bannerEl.style.display = 'none';
+    bannerEl.innerHTML = '';
+    return;
+  }
+  bannerEl.style.display = '';
+  let html = '<div class="deadline-banner-title">⚠ Prazos</div><div class="deadline-chip-row">';
+  overdue.forEach(j => {
+    html += '<button class="deadline-chip overdue" data-job="' + j.id + '">' + escapeHtml(j.nome) + ' · atrasado</button>';
+  });
+  dueToday.forEach(j => {
+    html += '<button class="deadline-chip today" data-job="' + j.id + '">' + escapeHtml(j.nome) + ' · hoje</button>';
+  });
+  html += '</div>';
+  bannerEl.innerHTML = html;
+  bannerEl.querySelectorAll('[data-job]').forEach(btn => {
+    btn.addEventListener('click', () => openDetailModal(btn.getAttribute('data-job')));
+  });
+}
+
+function maybeFireDeadlineNotification(overdue, dueToday){
+  if(typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
+  if(overdue.length === 0 && dueToday.length === 0) return;
+  const today = todayISO();
+  if(localStorage.getItem('esteira-last-deadline-notify') === today) return;
+  localStorage.setItem('esteira-last-deadline-notify', today);
+  const parts = [];
+  if(overdue.length) parts.push(overdue.length + ' atrasado' + (overdue.length > 1 ? 's' : ''));
+  if(dueToday.length) parts.push(dueToday.length + ' vencendo hoje');
+  const body = parts.join(' · ');
+  const opts = {body, icon: 'assets/icon-192.png', badge: 'assets/icon-192.png'};
+  try{
+    if(navigator.serviceWorker && navigator.serviceWorker.ready){
+      navigator.serviceWorker.ready.then(reg => reg.showNotification('Esteira de Edição', opts));
+    } else {
+      new Notification('Esteira de Edição', opts);
+    }
+  }catch(e){ console.error('Falha ao mostrar notificação', e); }
+}
+
+function updateNotifButton(){
+  ['notif-btn', 'notif-btn-mobile'].forEach(id => {
+    const btn = document.getElementById(id);
+    if(!btn) return;
+    if(!isEditor() || typeof Notification === 'undefined'){ btn.style.display = 'none'; return; }
+    if(Notification.permission === 'granted'){ btn.style.display = 'none'; return; }
+    btn.style.display = '';
+    btn.textContent = Notification.permission === 'denied' ? '🔕' : '🔔';
+    btn.title = Notification.permission === 'denied'
+      ? 'Notificações bloqueadas — ative nas permissões do site, no navegador'
+      : 'Ativar notificações de prazo';
+  });
+}
+
+function requestNotificationPermission(){
+  if(typeof Notification === 'undefined') return;
+  if(Notification.permission === 'denied'){
+    alert('As notificações estão bloqueadas nas configurações do navegador. Para ativar, vá nas permissões deste site e libere "Notificações".');
+    return;
+  }
+  Notification.requestPermission().then(() => {
+    updateNotifButton();
+    checkDeadlineAlerts();
+  });
+}
+
 function openDetailModal(jobId){
   detailJobId = jobId;
   renderDetailModal();
@@ -1021,6 +1143,7 @@ function renderDetailModal(){
   if(!job) return;
   const editable = isEditor();
   const col = COLUMNS.find(c => c.id === job.status);
+  const idx = COLUMNS.findIndex(c => c.id === job.status);
   const vis = getJobVisual(job);
   const body = document.getElementById('detail-body');
   body.innerHTML =
@@ -1032,6 +1155,19 @@ function renderDetailModal(){
       '</div>' +
     '</div>' +
     '<div class="meta" style="margin:14px 0 0;">' + vis.metaText + '</div>' +
+    (editable ?
+      '<div class="detail-section">' +
+        '<div class="detail-actions-row">' +
+          '<button class="btn-ghost" data-detail-move="-1" ' + (idx===0?'disabled style="opacity:0.3"':'') + '>‹ Mover</button>' +
+          '<button class="btn-ghost" data-detail-move="1" ' + (idx===COLUMNS.length-1?'disabled style="opacity:0.3"':'') + '>Mover ›</button>' +
+          '<button class="btn-ghost" data-detail-dup title="Duplicar">⧉ Duplicar</button>' +
+          '<button class="btn-ghost" style="color:var(--red);border-color:var(--red-dim);" data-detail-del title="Remover">✕ Remover</button>' +
+        '</div>' +
+        (job.status === 'revisao' ?
+          '<button class="btn-ghost rework-btn" data-detail-rework style="margin-top:8px;">↺ Mandar para refação</button>'
+          : '') +
+      '</div>'
+      : '') +
     '<div class="detail-section">' +
       '<div class="detail-section-title">Formatos</div>' +
       '<div class="checks" id="detail-formats"></div>' +
@@ -1056,6 +1192,19 @@ function renderDetailModal(){
   if(editable){
     nameInput.addEventListener('blur', () => renameJob(job.id, nameInput.value));
     nameInput.addEventListener('keydown', e => { if(e.key === 'Enter') nameInput.blur(); });
+
+    const moveLeftBtn = body.querySelector('[data-detail-move="-1"]');
+    if(moveLeftBtn) moveLeftBtn.addEventListener('click', () => { moveJob(job.id, -1); closeDetailModal(); });
+    const moveRightBtn = body.querySelector('[data-detail-move="1"]');
+    if(moveRightBtn) moveRightBtn.addEventListener('click', () => { moveJob(job.id, 1); closeDetailModal(); });
+    const dupBtn = body.querySelector('[data-detail-dup]');
+    if(dupBtn) dupBtn.addEventListener('click', () => { duplicateJob(job.id); closeDetailModal(); });
+    const delBtn = body.querySelector('[data-detail-del]');
+    if(delBtn) delBtn.addEventListener('click', () => {
+      if(confirm('Remover "' + job.nome + '" da esteira?')){ deleteJob(job.id); closeDetailModal(); }
+    });
+    const reworkBtn = body.querySelector('[data-detail-rework]');
+    if(reworkBtn) reworkBtn.addEventListener('click', () => { sendToRework(job.id); closeDetailModal(); });
   }
 
   const formatsEl = document.getElementById('detail-formats');
@@ -1292,6 +1441,7 @@ function render(){
   area.innerHTML = '';
   area.appendChild(board);
   window.scrollTo(0, scrollY);
+  checkDeadlineAlerts();
 }
 
 function renderDetailCuts(){

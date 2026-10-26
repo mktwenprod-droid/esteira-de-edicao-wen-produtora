@@ -69,6 +69,16 @@ O site é um PWA (Progressive Web App): dá pra instalar na tela de início do c
 
 Depois de instalado, o ícone usa a logo da WEN e o app abre direto no quadro, sem precisar digitar a URL toda vez.
 
+## Layout mobile e toque-e-segure
+
+No celular, o quadro aparece como uma lista vertical só (todas as colunas empilhadas, sem precisar arrastar pros lados), com cada job numa linha enxuta: um pontinho colorido indicando o status/prazo, o nome e uma linha de prazo embaixo. Os botões de mover/duplicar/remover/refação ficam escondidos dessa lista pra deixar ela limpa — pra usar essas ações no mobile, é só tocar no card pra abrir os detalhes (lá tem tudo) ou **tocar e segurar** o card por meio segundo pra abrir um menu rápido "Mover para..." com todas as colunas.
+
+## Notificação de prazo
+
+Editores logados veem um aviso no topo do quadro sempre que algum job estiver atrasado ou vencendo hoje (considerando o prazo de 4 dias úteis, seja da decupagem original ou de uma refação em andamento). Clicando num item do aviso, abre direto o job.
+
+Tem também um sino **🔔** no topo (ao lado do botão de entrar) pra ativar notificações do próprio navegador/celular — assim que alguém com permissão de editor abrir o site num dia com algo atrasado ou vencendo, recebe uma notificação do sistema (uma vez por dia, não fica repetindo). Isso só funciona enquanto alguém abre o site em algum momento do dia — não é uma notificação push de verdade chegando com o app fechado (isso exigiria um servidor rodando separado, com custo de infraestrutura).
+
 ## Publicar / acessar de qualquer lugar (GitHub Pages)
 
 Depois que o repositório for publicado no GitHub com Pages habilitado, o site fica disponível em:
