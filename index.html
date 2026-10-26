@@ -150,7 +150,10 @@
   .month-tab{flex:none;font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:12.5px;padding:8px 15px;border-radius:999px;border:1px solid var(--border);background:var(--panel);color:var(--text-muted);cursor:pointer;transition:color .15s ease,border-color .15s ease;white-space:nowrap;}
   .month-tab:hover{color:var(--text);border-color:var(--border-strong);}
   .month-tab.active{background:var(--primary);border-color:var(--primary);color:#fff;}
+  .archive-tab{margin-left:auto;flex:none;border-color:var(--track-dim);color:var(--track);}
+  .archive-tab.active{background:var(--track);border-color:var(--track);color:#06110c;}
   .board{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;align-items:start;}
+  .board.board-archive{grid-template-columns:1fr;max-width:520px;}
   @media(max-width:1100px){.board{grid-template-columns:repeat(2,1fr);}}
   @media(max-width:700px){
     .board{display:flex;flex-direction:column;grid-template-columns:none;gap:22px;}
@@ -501,6 +504,8 @@ let jobsListenerAttached = false;
 let podcastsListenerAttached = false;
 let selectedMonth = 'all';
 let detailJobId = null;
+let boardView = 'ativo';
+const ARCHIVE_AFTER_DAYS = 30;
 let collapsedCols = new Set();
 try{ collapsedCols = new Set(JSON.parse(localStorage.getItem('esteira-collapsed-cols') || '[]')); }catch(e){}
 
@@ -660,6 +665,7 @@ function listenJobs(){
     if(suppressNextWrite){ suppressNextWrite = false; return; }
     const data = snap.data();
     jobs = (data && data.list) ? data.list : [];
+    backfillEntregueEm();
     render();
   }, err => {
     setStatus('error', 'Erro ao ler dados: ' + err.message);
@@ -873,17 +879,25 @@ function toggleFormat(id, fmt){
   render();
 }
 
+function setJobStatus(job, newStatus){
+  if(newStatus !== 'decupagem' && !job.recebido){
+    job.recebido = todayISO();
+  }
+  if(newStatus === 'entregue'){
+    if(!job.entregueEm) job.entregueEm = todayISO();
+  } else {
+    delete job.entregueEm;
+  }
+  job.status = newStatus;
+}
+
 function moveJob(id, dir){
   const job = jobs.find(j => j.id === id);
   if(!job) return;
   const idx = COLUMNS.findIndex(c => c.id === job.status);
   const newIdx = idx + dir;
   if(newIdx < 0 || newIdx >= COLUMNS.length) return;
-  const newCol = COLUMNS[newIdx].id;
-  if(newCol !== 'decupagem' && !job.recebido){
-    job.recebido = todayISO();
-  }
-  job.status = newCol;
+  setJobStatus(job, COLUMNS[newIdx].id);
   persist();
   render();
 }
@@ -901,10 +915,7 @@ function sendToRework(id){
 function moveJobToStatus(id, status){
   const job = jobs.find(j => j.id === id);
   if(!job || job.status === status) return;
-  if(status !== 'decupagem' && !job.recebido){
-    job.recebido = todayISO();
-  }
-  job.status = status;
+  setJobStatus(job, status);
   persist();
   render();
 }
@@ -966,6 +977,34 @@ function jobMatchesMonth(job){
   return monthKey(job.recebido) === selectedMonth;
 }
 
+function daysSinceISO(iso){
+  return Math.floor((Date.now() - new Date(iso + 'T00:00:00').getTime()) / 86400000);
+}
+function isArchivedDelivery(job){
+  return job.status === 'entregue' && job.entregueEm && daysSinceISO(job.entregueEm) > ARCHIVE_AFTER_DAYS;
+}
+function backfillEntregueEm(){
+  if(!isEditor()) return;
+  let changed = false;
+  jobs.forEach(job => {
+    if(job.status === 'entregue' && !job.entregueEm){
+      if(job.recebido){
+        job.entregueEm = job.recebido;
+      } else {
+        const d = new Date();
+        d.setDate(d.getDate() - (ARCHIVE_AFTER_DAYS + 1));
+        job.entregueEm = new Date(d.getFullYear(), d.getMonth(), d.getDate()).toISOString().slice(0,10);
+      }
+      changed = true;
+    }
+  });
+  if(changed) persist();
+}
+function toggleBoardView(){
+  boardView = boardView === 'ativo' ? 'arquivo' : 'ativo';
+  render();
+}
+
 function renderMonthTabs(){
   const months = new Set([monthKey(todayISO())]);
   jobs.forEach(j => { if(j.recebido) months.add(monthKey(j.recebido)); });
@@ -985,6 +1024,15 @@ function renderMonthTabs(){
     btn.addEventListener('click', () => { selectedMonth = key; render(); });
     wrap.appendChild(btn);
   });
+
+  const archivedCount = jobs.filter(isArchivedDelivery).length;
+  if(boardView === 'arquivo' || archivedCount > 0){
+    const archiveBtn = document.createElement('button');
+    archiveBtn.className = 'month-tab archive-tab' + (boardView === 'arquivo' ? ' active' : '');
+    archiveBtn.textContent = boardView === 'arquivo' ? '← Voltar ao quadro' : '📦 Arquivo (' + archivedCount + ')';
+    archiveBtn.addEventListener('click', toggleBoardView);
+    wrap.appendChild(archiveBtn);
+  }
 }
 
 function computeDeadlineInfo(job){
@@ -1273,170 +1321,186 @@ function addLinkAttachment(){
   statusEl.textContent = '';
 }
 
+function buildJobCard(job, col, editable){
+  const idx = COLUMNS.findIndex(c => c.id === col.id);
+  const vis = getJobVisual(job);
+
+  const card = document.createElement('div');
+  card.className = 'card';
+  if(vis.stateColor){
+    card.style.borderColor = vis.stateDim;
+    card.style.setProperty('--card-glow', vis.stateDim);
+  }
+  let longPressFired = false;
+  card.addEventListener('click', () => {
+    if(longPressFired){ longPressFired = false; return; }
+    openDetailModal(job.id);
+  });
+  card.innerHTML =
+    '<div class="card-top">' +
+      '<div class="card-name" data-name>' + escapeHtml(job.nome) + (job.refacao ? ' <span class="rework-mark" title="Em refação">*</span>' : '') + '</div>' +
+      vis.ringHtml +
+    '</div>' +
+    '<div class="meta">' + vis.metaText + '</div>' +
+    '<div class="fmts" data-fmts></div>' +
+    '<div class="attachments" data-attachments></div>' +
+    (editable ?
+      '<div class="card-actions">' +
+        '<div class="movebtns">' +
+          '<button ' + (idx===0?'disabled style="opacity:0.3"':'') + ' data-move="-1">‹</button>' +
+          '<button ' + (idx===COLUMNS.length-1?'disabled style="opacity:0.3"':'') + ' data-move="1">›</button>' +
+        '</div>' +
+        '<div class="iconbtns">' +
+          '<button class="iconbtn" data-dup title="Duplicar">⧉</button>' +
+          '<button class="iconbtn delbtn" data-del title="Remover">✕</button>' +
+        '</div>' +
+      '</div>' +
+      (col.id === 'revisao' ?
+        '<button class="btn-ghost rework-btn" data-rework title="Volta para Em edição e reinicia o prazo em 4 dias úteis">↺ Mandar para refação</button>'
+        : '')
+      : '');
+
+  const nameEl = card.querySelector('[data-name]');
+  if(editable){
+    nameEl.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.className = 'card-name-input';
+      input.value = job.nome;
+      nameEl.replaceWith(input);
+      input.focus();
+      input.select();
+      input.addEventListener('click', ev => ev.stopPropagation());
+      const commit = () => renameJob(job.id, input.value);
+      input.addEventListener('blur', commit);
+      input.addEventListener('keydown', (e) => { if(e.key === 'Enter') input.blur(); });
+    });
+  }
+
+  const fmtsEl = card.querySelector('[data-fmts]');
+  job.formatos.forEach(fmt => {
+    const chip = document.createElement('label');
+    chip.className = 'fmt-chip' + (job.done[fmt] ? ' done' : '');
+    chip.innerHTML = '<input type="checkbox" ' + (job.done[fmt]?'checked':'') + (editable?'':' disabled') + '> ' + FMT_LABEL[fmt];
+    chip.addEventListener('click', e => e.stopPropagation());
+    if(editable) chip.querySelector('input').addEventListener('change', () => toggleFormat(job.id, fmt));
+    fmtsEl.appendChild(chip);
+  });
+
+  const attWrap = card.querySelector('[data-attachments]');
+  (job.attachments || []).forEach(att => {
+    const a = document.createElement('a');
+    a.className = 'att-chip';
+    a.href = encodeURI(att.url);
+    a.target = '_blank';
+    a.rel = 'noopener';
+    a.title = att.name;
+    a.innerHTML = ATT_ICONS[att.type] + '<span>' + escapeHtml(truncateText(att.name, 16)) + '</span>';
+    a.addEventListener('click', e => e.stopPropagation());
+    attWrap.appendChild(a);
+  });
+
+  if(editable){
+    card.querySelectorAll('[data-move]').forEach(btn => {
+      btn.addEventListener('click', (e) => { e.stopPropagation(); moveJob(job.id, parseInt(btn.getAttribute('data-move'))); });
+    });
+    const reworkBtn = card.querySelector('[data-rework]');
+    if(reworkBtn) reworkBtn.addEventListener('click', (e) => { e.stopPropagation(); sendToRework(job.id); });
+    card.querySelector('[data-dup]').addEventListener('click', (e) => { e.stopPropagation(); duplicateJob(job.id); });
+    card.querySelector('[data-del]').addEventListener('click', (e) => {
+      e.stopPropagation();
+      if(confirm('Remover "' + job.nome + '" da esteira?')) deleteJob(job.id);
+    });
+
+    let pressTimer = null;
+    let startX = 0, startY = 0;
+    const LONG_PRESS_MS = 480;
+    const MOVE_TOLERANCE = 10;
+    const cancelPress = () => {
+      clearTimeout(pressTimer);
+      card.classList.remove('pressing');
+    };
+    card.addEventListener('pointerdown', (e) => {
+      if(e.pointerType === 'mouse' && e.button !== 0) return;
+      if(e.target.closest('button, a, input, label')) return;
+      startX = e.clientX; startY = e.clientY;
+      card.classList.add('pressing');
+      pressTimer = setTimeout(() => {
+        longPressFired = true;
+        cancelPress();
+        if(navigator.vibrate) navigator.vibrate(15);
+        openColumnPicker(job.id);
+      }, LONG_PRESS_MS);
+    });
+    card.addEventListener('pointermove', (e) => {
+      if(Math.abs(e.clientX - startX) > MOVE_TOLERANCE || Math.abs(e.clientY - startY) > MOVE_TOLERANCE){
+        cancelPress();
+      }
+    });
+    card.addEventListener('pointerup', cancelPress);
+    card.addEventListener('pointerleave', cancelPress);
+    card.addEventListener('pointercancel', cancelPress);
+  }
+
+  return card;
+}
+
+function buildColumnSection(col, colJobs, editable, collapsible){
+  const isCollapsed = collapsible && collapsedCols.has(col.id);
+  const colEl = document.createElement('div');
+  colEl.className = 'col' + (isCollapsed ? ' collapsed' : '');
+
+  colEl.innerHTML = '<div class="col-head">' +
+    '<div class="col-head-left">' +
+      (collapsible ?
+        '<button class="col-collapse-btn" data-collapse title="Recolher/expandir coluna">' +
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>' +
+        '</button>'
+        : '') +
+      '<span class="col-title">' + escapeHtml(col.label) + '</span>' +
+    '</div>' +
+    '<span class="col-count">' + colJobs.length + '</span></div>';
+  if(collapsible) colEl.querySelector('[data-collapse]').addEventListener('click', () => toggleColumnCollapse(col.id));
+  const cardsWrap = document.createElement('div');
+  cardsWrap.className = 'cards';
+
+  if(colJobs.length === 0){
+    cardsWrap.innerHTML = '<div class="empty">Sem jobs</div>';
+  }
+
+  colJobs.forEach(job => cardsWrap.appendChild(buildJobCard(job, col, editable)));
+
+  colEl.appendChild(cardsWrap);
+  return colEl;
+}
+
+function sortByDeadline(a, b){
+  if(!a.recebido && !b.recebido) return 0;
+  if(!a.recebido) return 1;
+  if(!b.recebido) return -1;
+  return addBusinessDays(a.recebido,4) - addBusinessDays(b.recebido,4);
+}
+
 function render(){
   const scrollY = window.scrollY;
   renderMonthTabs();
   const area = document.getElementById('board-area');
   const board = document.createElement('div');
   board.className = 'board';
+  const editable = isEditor();
 
-  COLUMNS.forEach(col => {
-    const isCollapsed = collapsedCols.has(col.id);
-    const colEl = document.createElement('div');
-    colEl.className = 'col' + (isCollapsed ? ' collapsed' : '');
-    const colJobs = jobs.filter(j => j.status === col.id && jobMatchesMonth(j)).sort((a,b) => {
-      if(!a.recebido && !b.recebido) return 0;
-      if(!a.recebido) return 1;
-      if(!b.recebido) return -1;
-      const da = addBusinessDays(a.recebido,4), db2 = addBusinessDays(b.recebido,4);
-      return da - db2;
+  if(boardView === 'arquivo'){
+    board.classList.add('board-archive');
+    const archivedJobs = jobs.filter(isArchivedDelivery).sort((a,b) => (b.entregueEm||'').localeCompare(a.entregueEm||''));
+    const archiveCol = {id:'entregue', label:'Arquivo — entregues há mais de ' + ARCHIVE_AFTER_DAYS + ' dias'};
+    board.appendChild(buildColumnSection(archiveCol, archivedJobs, editable, false));
+  } else {
+    COLUMNS.forEach(col => {
+      const colJobs = jobs.filter(j => j.status === col.id && jobMatchesMonth(j) && !isArchivedDelivery(j)).sort(sortByDeadline);
+      board.appendChild(buildColumnSection(col, colJobs, editable, true));
     });
-
-    colEl.innerHTML = '<div class="col-head">' +
-      '<div class="col-head-left">' +
-        '<button class="col-collapse-btn" data-collapse title="Recolher/expandir coluna">' +
-          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>' +
-        '</button>' +
-        '<span class="col-title">' + col.label + '</span>' +
-      '</div>' +
-      '<span class="col-count">' + colJobs.length + '</span></div>';
-    colEl.querySelector('[data-collapse]').addEventListener('click', () => toggleColumnCollapse(col.id));
-    const cardsWrap = document.createElement('div');
-    cardsWrap.className = 'cards';
-
-    if(colJobs.length === 0){
-      cardsWrap.innerHTML = '<div class="empty">Sem jobs</div>';
-    }
-
-    const editable = isEditor();
-    colJobs.forEach(job => {
-      const idx = COLUMNS.findIndex(c => c.id === col.id);
-      const vis = getJobVisual(job);
-
-      const card = document.createElement('div');
-      card.className = 'card';
-      if(vis.stateColor){
-        card.style.borderColor = vis.stateDim;
-        card.style.setProperty('--card-glow', vis.stateDim);
-      }
-      let longPressFired = false;
-      card.addEventListener('click', () => {
-        if(longPressFired){ longPressFired = false; return; }
-        openDetailModal(job.id);
-      });
-      card.innerHTML =
-        '<div class="card-top">' +
-          '<div class="card-name" data-name>' + escapeHtml(job.nome) + (job.refacao ? ' <span class="rework-mark" title="Em refação">*</span>' : '') + '</div>' +
-          vis.ringHtml +
-        '</div>' +
-        '<div class="meta">' + vis.metaText + '</div>' +
-        '<div class="fmts" data-fmts></div>' +
-        '<div class="attachments" data-attachments></div>' +
-        (editable ?
-          '<div class="card-actions">' +
-            '<div class="movebtns">' +
-              '<button ' + (idx===0?'disabled style="opacity:0.3"':'') + ' data-move="-1">‹</button>' +
-              '<button ' + (idx===COLUMNS.length-1?'disabled style="opacity:0.3"':'') + ' data-move="1">›</button>' +
-            '</div>' +
-            '<div class="iconbtns">' +
-              '<button class="iconbtn" data-dup title="Duplicar">⧉</button>' +
-              '<button class="iconbtn delbtn" data-del title="Remover">✕</button>' +
-            '</div>' +
-          '</div>' +
-          (col.id === 'revisao' ?
-            '<button class="btn-ghost rework-btn" data-rework title="Volta para Em edição e reinicia o prazo em 4 dias úteis">↺ Mandar para refação</button>'
-            : '')
-          : '');
-
-      const nameEl = card.querySelector('[data-name]');
-      if(editable){
-        nameEl.addEventListener('click', (e) => {
-          e.stopPropagation();
-          const input = document.createElement('input');
-          input.type = 'text';
-          input.className = 'card-name-input';
-          input.value = job.nome;
-          nameEl.replaceWith(input);
-          input.focus();
-          input.select();
-          input.addEventListener('click', ev => ev.stopPropagation());
-          const commit = () => renameJob(job.id, input.value);
-          input.addEventListener('blur', commit);
-          input.addEventListener('keydown', (e) => { if(e.key === 'Enter') input.blur(); });
-        });
-      }
-
-      const fmtsEl = card.querySelector('[data-fmts]');
-      job.formatos.forEach(fmt => {
-        const chip = document.createElement('label');
-        chip.className = 'fmt-chip' + (job.done[fmt] ? ' done' : '');
-        chip.innerHTML = '<input type="checkbox" ' + (job.done[fmt]?'checked':'') + (editable?'':' disabled') + '> ' + FMT_LABEL[fmt];
-        chip.addEventListener('click', e => e.stopPropagation());
-        if(editable) chip.querySelector('input').addEventListener('change', () => toggleFormat(job.id, fmt));
-        fmtsEl.appendChild(chip);
-      });
-
-      const attWrap = card.querySelector('[data-attachments]');
-      (job.attachments || []).forEach(att => {
-        const a = document.createElement('a');
-        a.className = 'att-chip';
-        a.href = encodeURI(att.url);
-        a.target = '_blank';
-        a.rel = 'noopener';
-        a.title = att.name;
-        a.innerHTML = ATT_ICONS[att.type] + '<span>' + escapeHtml(truncateText(att.name, 16)) + '</span>';
-        a.addEventListener('click', e => e.stopPropagation());
-        attWrap.appendChild(a);
-      });
-
-      if(editable){
-        card.querySelectorAll('[data-move]').forEach(btn => {
-          btn.addEventListener('click', (e) => { e.stopPropagation(); moveJob(job.id, parseInt(btn.getAttribute('data-move'))); });
-        });
-        const reworkBtn = card.querySelector('[data-rework]');
-        if(reworkBtn) reworkBtn.addEventListener('click', (e) => { e.stopPropagation(); sendToRework(job.id); });
-        card.querySelector('[data-dup]').addEventListener('click', (e) => { e.stopPropagation(); duplicateJob(job.id); });
-        card.querySelector('[data-del]').addEventListener('click', (e) => {
-          e.stopPropagation();
-          if(confirm('Remover "' + job.nome + '" da esteira?')) deleteJob(job.id);
-        });
-
-        let pressTimer = null;
-        let startX = 0, startY = 0;
-        const LONG_PRESS_MS = 480;
-        const MOVE_TOLERANCE = 10;
-        const cancelPress = () => {
-          clearTimeout(pressTimer);
-          card.classList.remove('pressing');
-        };
-        card.addEventListener('pointerdown', (e) => {
-          if(e.pointerType === 'mouse' && e.button !== 0) return;
-          if(e.target.closest('button, a, input, label')) return;
-          startX = e.clientX; startY = e.clientY;
-          card.classList.add('pressing');
-          pressTimer = setTimeout(() => {
-            longPressFired = true;
-            cancelPress();
-            if(navigator.vibrate) navigator.vibrate(15);
-            openColumnPicker(job.id);
-          }, LONG_PRESS_MS);
-        });
-        card.addEventListener('pointermove', (e) => {
-          if(Math.abs(e.clientX - startX) > MOVE_TOLERANCE || Math.abs(e.clientY - startY) > MOVE_TOLERANCE){
-            cancelPress();
-          }
-        });
-        card.addEventListener('pointerup', cancelPress);
-        card.addEventListener('pointerleave', cancelPress);
-        card.addEventListener('pointercancel', cancelPress);
-      }
-
-      cardsWrap.appendChild(card);
-    });
-
-    colEl.appendChild(cardsWrap);
-    board.appendChild(colEl);
-  });
+  }
 
   area.innerHTML = '';
   area.appendChild(board);

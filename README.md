@@ -79,6 +79,12 @@ Editores logados veem um aviso no topo do quadro sempre que algum job estiver at
 
 Tem também um sino **🔔** no topo (ao lado do botão de entrar) pra ativar notificações do próprio navegador/celular — assim que alguém com permissão de editor abrir o site num dia com algo atrasado ou vencendo, recebe uma notificação do sistema (uma vez por dia, não fica repetindo). Isso só funciona enquanto alguém abre o site em algum momento do dia — não é uma notificação push de verdade chegando com o app fechado (isso exigiria um servidor rodando separado, com custo de infraestrutura).
 
+## Arquivo de entregas antigas
+
+Jobs que já estão em "Entregue" há mais de 30 dias somem do quadro principal automaticamente (contando a partir do dia em que o job entrou em "Entregue") e vão para uma aba separada: o botão **"📦 Arquivo (N)"**, que aparece no canto direito da fileira de meses, sempre que houver algo arquivado. Clicando nele, o quadro mostra só essa lista (mais recentes primeiro); clicando em "← Voltar ao quadro" volta ao normal. No arquivo ainda dá pra abrir o job, duplicar, excluir ou mover ele de volta pra qualquer coluna (útil se precisar reabrir uma entrega antiga).
+
+Jobs que já estavam marcados como "Entregue" antes dessa função existir não tinham a data exata registrada — na primeira vez que o site carrega depois dessa atualização, esses jobs recebem a data da decupagem como aproximação (ou uma data bem antiga, se nem isso existir), só pra já aparecerem arquivados corretamente.
+
 ## Publicar / acessar de qualquer lugar (GitHub Pages)
 
 Depois que o repositório for publicado no GitHub com Pages habilitado, o site fica disponível em:
