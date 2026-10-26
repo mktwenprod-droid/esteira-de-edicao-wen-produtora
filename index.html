@@ -154,17 +154,6 @@
   @media(max-width:1100px){.board{grid-template-columns:repeat(2,1fr);}}
   @media(max-width:700px){
     .board{display:flex;flex-direction:column;grid-template-columns:none;gap:22px;}
-    .col{width:100%;max-width:none;background:transparent;border:none;padding:0;min-height:0;}
-    .col-head{padding:0 2px 8px;margin-bottom:0;border-bottom:1px solid var(--border);}
-    .cards{gap:0;}
-    .card{background:transparent;border:none;border-bottom:1px solid var(--border);border-radius:0;padding:13px 2px;}
-    .card:hover{transform:none;box-shadow:none;}
-    .card.pressing{background:var(--panel-3);transform:none;box-shadow:none;border-color:transparent;}
-    .card .card-top{margin-bottom:3px;}
-    .card .ring{width:10px;height:10px;}
-    .card .ring-label{display:none;}
-    .card .meta{margin-bottom:0;}
-    .card .fmts,.card .attachments,.card .card-actions,.card .rework-btn{display:none;}
   }
   .col{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:12px;min-height:80px;transition:border-color .25s ease;}
   .col-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding:0 2px;}
@@ -291,6 +280,17 @@
   .deadline-chip.overdue{border-color:var(--red);color:var(--red);}
   .deadline-chip.today{border-color:var(--yellow);color:var(--yellow);}
   @media(max-width:700px){
+    .col{width:100%;max-width:none;background:transparent;border:none;padding:0;min-height:0;}
+    .col-head{padding:0 2px 8px;margin-bottom:0;border-bottom:1px solid var(--border);}
+    .cards{gap:0;}
+    .card{background:transparent;border:none;border-bottom:1px solid var(--border);border-radius:0;padding:13px 2px;}
+    .card:hover{transform:none;box-shadow:none;}
+    .card.pressing{background:var(--panel-3);transform:none;box-shadow:none;border-color:transparent;}
+    .card .card-top{margin-bottom:3px;}
+    .card .ring{width:10px;height:10px;}
+    .card .ring-label{display:none;}
+    .card .meta{margin-bottom:0;}
+    .card .fmts,.card .attachments,.card .card-actions,.card .rework-btn{display:none;}
     .movebtns button{width:34px;height:34px;font-size:16px;}
     .iconbtn{padding:6px;font-size:16px;}
     .col-collapse-btn{width:28px;height:28px;}
