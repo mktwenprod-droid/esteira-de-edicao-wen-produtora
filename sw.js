@@ -1,4 +1,4 @@
-const CACHE_NAME = 'esteira-wen-v2';
+const CACHE_NAME = 'esteira-wen-v3';
 const APP_SHELL = [
   './',
   './index.html',
@@ -27,11 +27,15 @@ self.addEventListener('fetch', (event) => {
   const req = event.request;
   if(req.method !== 'GET' || new URL(req.url).origin !== self.location.origin) return;
 
-  // Navegação/HTML: sempre busca a versão mais nova na rede primeiro.
-  // O cache só entra como fallback se o dispositivo estiver offline.
+  // Navegação/HTML: sempre busca a versão mais nova na rede primeiro,
+  // ignorando o cache HTTP do navegador (cache:'no-store') — sem isso,
+  // o Cache-Control do GitHub Pages (max-age=600) podia fazer o fetch()
+  // devolver uma resposta "fresca" só pros padrões do HTTP, mas com
+  // conteúdo antigo. O cache do Service Worker só entra como fallback
+  // se o dispositivo estiver offline.
   if(req.mode === 'navigate' || req.destination === 'document'){
     event.respondWith(
-      fetch(req)
+      fetch(req, {cache: 'no-store'})
         .then(res => {
           const resClone = res.clone();
           caches.open(CACHE_NAME).then(cache => cache.put(req, resClone));
