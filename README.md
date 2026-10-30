@@ -73,6 +73,8 @@ Depois de instalado, o ícone usa a logo da WEN e o app abre direto no quadro, s
 
 No celular, o quadro aparece como uma lista vertical só (todas as colunas empilhadas, sem precisar arrastar pros lados), com cada job numa linha enxuta: um pontinho colorido indicando o status/prazo, o nome e uma linha de prazo embaixo. Os botões de mover/duplicar/remover/refação ficam escondidos dessa lista pra deixar ela limpa — pra usar essas ações no mobile, é só tocar no card pra abrir os detalhes (lá tem tudo) ou **tocar e segurar** o card por meio segundo pra abrir um menu rápido "Mover para..." com todas as colunas.
 
+No computador, além dos botões ‹› e do menu "Mover para...", dá pra **clicar e arrastar** qualquer card direto para outra coluna, estilo Trello — soltando o card em cima da coluna de destino (mesmo que ela esteja recolhida) ele muda de status na hora. Arrastar de Revisão para Em edição já conta como refação (reinicia o prazo), igual aos outros jeitos de mover.
+
 ## Notificação de prazo
 
 Editores logados veem um aviso no topo do quadro sempre que algum job estiver atrasado ou vencendo hoje (considerando o prazo de 4 dias úteis, seja da decupagem original ou de uma refação em andamento). Clicando num item do aviso, abre direto o job.
